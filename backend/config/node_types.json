@@ -1,0 +1,521 @@
+{
+  "coreNodes": [
+    {
+      "id": "core.begin",
+      "name": "Begin",
+      "title": "Begin",
+      "description": "Starting point of the workflow",
+      "category": "CONTROL_FLOW",
+      "status": "available",
+      "inputs": [],
+      "outputs": [
+        {
+          "id": "output",
+          "name": "output",
+          "type": "any",
+          "description": "Output connection"
+        }
+      ]
+    },
+    {
+      "id": "core.end",
+      "name": "End",
+      "title": "End",
+      "description": "Ending point of the workflow",
+      "category": "CONTROL_FLOW",
+      "status": "available",
+      "inputs": [
+        {
+          "id": "input",
+          "name": "input",
+          "type": "any",
+          "description": "Input connection"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "id": "core.conditional",
+      "name": "Conditional",
+      "title": "Conditional",
+      "description": "Branch workflow based on conditions",
+      "category": "CONTROL_FLOW",
+      "status": "available",
+      "inputs": [
+        {
+          "id": "condition",
+          "name": "condition",
+          "type": "boolean",
+          "description": "Condition to evaluate"
+        },
+        {
+          "id": "input",
+          "name": "input",
+          "type": "any",
+          "description": "Input value"
+        }
+      ],
+      "outputs": [
+        {
+          "id": "true",
+          "name": "true",
+          "type": "any",
+          "description": "Output when condition is true"
+        },
+        {
+          "id": "false",
+          "name": "false",
+          "type": "any",
+          "description": "Output when condition is false"
+        }
+      ]
+    },
+    {
+      "id": "core.loop",
+      "name": "Loop",
+      "title": "Loop",
+      "description": "Loop through items or repeat operations",
+      "category": "CONTROL_FLOW",
+      "status": "available",
+      "inputs": [
+        {
+          "id": "items",
+          "name": "items",
+          "type": "array",
+          "description": "Items to loop through"
+        }
+      ],
+      "outputs": [
+        {
+          "id": "item",
+          "name": "item",
+          "type": "any",
+          "description": "Current item in the loop"
+        },
+        {
+          "id": "index",
+          "name": "index",
+          "type": "number",
+          "description": "Current index in the loop"
+        },
+        {
+          "id": "completed",
+          "name": "completed",
+          "type": "any",
+          "description": "Output when loop is completed"
+        }
+      ]
+    },
+    {
+      "id": "core.text_input",
+      "name": "Text Input",
+      "title": "Text Input",
+      "description": "Input for text values",
+      "category": "TEXT",
+      "status": "available",
+      "inputs": [],
+      "outputs": [
+        {
+          "id": "text",
+          "name": "text",
+          "type": "string",
+          "description": "Text output"
+        }
+      ],
+      "config_fields": [
+        {
+          "id": "default_text",
+          "name": "Default Text",
+          "type": "string",
+          "description": "Default text value",
+          "required": false,
+          "default_value": "",
+          "options": null,
+          "validation": null,
+          "ui_properties": {
+            "component": "text_input",
+            "placeholder": "Enter default text"
+          }
+        }
+      ]
+    },
+    {
+      "id": "core.text_output",
+      "name": "Text Output",
+      "title": "Text Output",
+      "description": "Display text output",
+      "category": "TEXT",
+      "status": "available",
+      "inputs": [
+        {
+          "id": "text",
+          "name": "text",
+          "type": "string",
+          "description": "Text to display"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "id": "core.string_operations",
+      "name": "String Operations",
+      "title": "String Operations",
+      "description": "Perform string operations",
+      "category": "TEXT",
+      "status": "available",
+      "inputs": [
+        {
+          "id": "text",
+          "name": "text",
+          "type": "string",
+          "description": "Input text"
+        }
+      ],
+      "outputs": [
+        {
+          "id": "result",
+          "name": "result",
+          "type": "string",
+          "description": "Operation result"
+        }
+      ],
+      "config_fields": [
+        {
+          "id": "operation",
+          "name": "Operation",
+          "type": "string",
+          "description": "String operation to perform",
+          "required": true,
+          "default_value": "uppercase",
+          "options": [
+            {"value": "uppercase", "label": "Convert to Uppercase"},
+            {"value": "lowercase", "label": "Convert to Lowercase"},
+            {"value": "trim", "label": "Trim Whitespace"},
+            {"value": "replace", "label": "Replace Text"}
+          ],
+          "validation": null,
+          "ui_properties": {
+            "component": "select"
+          }
+        },
+        {
+          "id": "search_text",
+          "name": "Search Text",
+          "type": "string",
+          "description": "Text to search for (for replace operation)",
+          "required": false,
+          "default_value": "",
+          "options": null,
+          "validation": null,
+          "ui_properties": {
+            "component": "text_input",
+            "placeholder": "Text to search for",
+            "conditional": {
+              "field": "operation",
+              "value": "replace"
+            }
+          }
+        },
+        {
+          "id": "replace_text",
+          "name": "Replace Text",
+          "type": "string",
+          "description": "Text to replace with (for replace operation)",
+          "required": false,
+          "default_value": "",
+          "options": null,
+          "validation": null,
+          "ui_properties": {
+            "component": "text_input",
+            "placeholder": "Text to replace with",
+            "conditional": {
+              "field": "operation",
+              "value": "replace"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "core.variable",
+      "name": "Variable",
+      "title": "Variable",
+      "description": "Store and retrieve variable values",
+      "category": "DATA",
+      "status": "available",
+      "inputs": [
+        {
+          "id": "value",
+          "name": "value",
+          "type": "any",
+          "description": "Value to store"
+        }
+      ],
+      "outputs": [
+        {
+          "id": "value",
+          "name": "value",
+          "type": "any",
+          "description": "Stored value"
+        }
+      ]
+    },
+    {
+      "id": "core.math_operations",
+      "name": "Math Operations",
+      "title": "Math Operations",
+      "description": "Perform mathematical operations",
+      "category": "MATH",
+      "status": "available",
+      "inputs": [
+        {
+          "id": "a",
+          "name": "a",
+          "type": "number",
+          "description": "First operand"
+        },
+        {
+          "id": "b",
+          "name": "b",
+          "type": "number",
+          "description": "Second operand"
+        }
+      ],
+      "outputs": [
+        {
+          "id": "result",
+          "name": "result",
+          "type": "number",
+          "description": "Operation result"
+        }
+      ],
+      "config_fields": [
+        {
+          "id": "operation",
+          "name": "Operation",
+          "type": "string",
+          "description": "Mathematical operation to perform",
+          "required": true,
+          "default_value": "add",
+          "options": [
+            {"value": "add", "label": "Addition (+)"},
+            {"value": "subtract", "label": "Subtraction (-)"},
+            {"value": "multiply", "label": "Multiplication (×)"},
+            {"value": "divide", "label": "Division (÷)"},
+            {"value": "power", "label": "Power (^)"},
+            {"value": "modulo", "label": "Modulo (%)"}
+          ],
+          "validation": null,
+          "ui_properties": {
+            "component": "select"
+          }
+        },
+        {
+          "id": "default_a",
+          "name": "Default Value for A",
+          "type": "number",
+          "description": "Default value for the first operand",
+          "required": false,
+          "default_value": 0,
+          "options": null,
+          "validation": null,
+          "ui_properties": {
+            "component": "number_input"
+          }
+        },
+        {
+          "id": "default_b",
+          "name": "Default Value for B",
+          "type": "number",
+          "description": "Default value for the second operand",
+          "required": false,
+          "default_value": 0,
+          "options": null,
+          "validation": null,
+          "ui_properties": {
+            "component": "number_input"
+          }
+        }
+      ]
+    }
+  ],
+  "plugins": [
+    {
+      "id": "data_filter",
+      "name": "Data Filter",
+      "title": "Data Filter",
+      "description": "Filter data based on conditions",
+      "category": "PROCESSING",
+      "status": "available",
+      "inputs": [
+        {
+          "id": "data",
+          "name": "data",
+          "type": "array",
+          "description": "Data to filter"
+        },
+        {
+          "id": "condition",
+          "name": "condition",
+          "type": "string",
+          "description": "Filter condition"
+        }
+      ],
+      "outputs": [
+        {
+          "id": "filtered_data",
+          "name": "filtered_data",
+          "type": "array",
+          "description": "Filtered data"
+        }
+      ],
+      "config_fields": [
+        {
+          "id": "filter_field",
+          "name": "Filter Field",
+          "type": "string",
+          "description": "Field to filter by",
+          "required": true,
+          "default_value": "",
+          "options": null,
+          "validation": null,
+          "ui_properties": {
+            "component": "text_input",
+            "placeholder": "Field name"
+          }
+        },
+        {
+          "id": "filter_operator",
+          "name": "Filter Operator",
+          "type": "string",
+          "description": "Operator to use for filtering",
+          "required": true,
+          "default_value": "equals",
+          "options": [
+            {"value": "equals", "label": "Equals (=)"},
+            {"value": "not_equals", "label": "Not Equals (!=)"},
+            {"value": "greater_than", "label": "Greater Than (>)"},
+            {"value": "less_than", "label": "Less Than (<)"},
+            {"value": "contains", "label": "Contains"},
+            {"value": "starts_with", "label": "Starts With"},
+            {"value": "ends_with", "label": "Ends With"}
+          ],
+          "validation": null,
+          "ui_properties": {
+            "component": "select"
+          }
+        },
+        {
+          "id": "filter_value",
+          "name": "Filter Value",
+          "type": "string",
+          "description": "Value to filter by",
+          "required": true,
+          "default_value": "",
+          "options": null,
+          "validation": null,
+          "ui_properties": {
+            "component": "text_input",
+            "placeholder": "Value to compare against"
+          }
+        }
+      ]
+    },
+    {
+      "id": "data_mapper",
+      "name": "Data Mapper",
+      "title": "Data Mapper",
+      "description": "Map data from one format to another",
+      "category": "PROCESSING",
+      "status": "available",
+      "inputs": [
+        {
+          "id": "data",
+          "name": "data",
+          "type": "array",
+          "description": "Data to map"
+        },
+        {
+          "id": "mapping",
+          "name": "mapping",
+          "type": "object",
+          "description": "Mapping configuration"
+        }
+      ],
+      "outputs": [
+        {
+          "id": "mapped_data",
+          "name": "mapped_data",
+          "type": "array",
+          "description": "Mapped data"
+        }
+      ]
+    },
+    {
+      "id": "data_merger",
+      "name": "Data Merger",
+      "title": "Data Merger",
+      "description": "Merge multiple data sources",
+      "category": "DATA",
+      "status": "available",
+      "inputs": [
+        {
+          "id": "data1",
+          "name": "data1",
+          "type": "array",
+          "description": "First data source"
+        },
+        {
+          "id": "data2",
+          "name": "data2",
+          "type": "array",
+          "description": "Second data source"
+        }
+      ],
+      "outputs": [
+        {
+          "id": "merged_data",
+          "name": "merged_data",
+          "type": "array",
+          "description": "Merged data"
+        }
+      ]
+    },
+    {
+      "id": "data_sorter",
+      "name": "Data Sorter",
+      "title": "Data Sorter",
+      "description": "Sort data based on criteria",
+      "category": "PROCESSING",
+      "status": "available",
+      "inputs": [
+        {
+          "id": "data",
+          "name": "data",
+          "type": "array",
+          "description": "Data to sort"
+        },
+        {
+          "id": "sort_key",
+          "name": "sort_key",
+          "type": "string",
+          "description": "Key to sort by"
+        },
+        {
+          "id": "ascending",
+          "name": "ascending",
+          "type": "boolean",
+          "description": "Sort in ascending order"
+        }
+      ],
+      "outputs": [
+        {
+          "id": "sorted_data",
+          "name": "sorted_data",
+          "type": "array",
+          "description": "Sorted data"
+        }
+      ]
+    }
+  ]
+}

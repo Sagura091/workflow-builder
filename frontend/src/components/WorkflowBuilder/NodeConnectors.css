@@ -1,0 +1,253 @@
+/* Node Connectors Styles */
+
+.connection-points {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.input-point, .output-point {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: #fff;
+  border: 2px solid #3b82f6;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+  pointer-events: all;
+  z-index: 10;
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+              background-color 0.2s ease,
+              box-shadow 0.2s ease;
+  box-shadow: 0 0 4px 0 rgba(59, 130, 246, 0.6);
+}
+
+.input-point {
+  left: 0;
+  transform: translate(-50%, -50%);
+}
+
+.output-point {
+  right: 0;
+  transform: translate(50%, -50%);
+}
+
+.input-point:hover {
+  background-color: #93c5fd;
+  transform: translate(-50%, -50%) scale(1.8);
+  box-shadow: 0 0 0 6px rgba(59, 130, 246, 0.5), 0 0 16px rgba(59, 130, 246, 0.3);
+  z-index: 20;
+}
+
+.output-point:hover {
+  background-color: #93c5fd;
+  transform: translate(50%, -50%) scale(1.8);
+  box-shadow: 0 0 0 6px rgba(59, 130, 246, 0.5), 0 0 16px rgba(59, 130, 246, 0.3);
+  z-index: 20;
+}
+
+/* Pulse animation for connection points */
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(59, 130, 246, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+  }
+}
+
+.workflow-node.selected .input-point,
+.workflow-node.selected .output-point {
+  animation: pulse 2s infinite;
+}
+
+.port-label {
+  position: absolute;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.3s, transform 0.3s;
+  pointer-events: none;
+  background-color: rgba(255, 255, 255, 0.95);
+  padding: 4px 8px;
+  border-radius: 4px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+  z-index: 20;
+  color: #1f2937;
+  transform: translateY(-50%) scale(0.9);
+}
+
+.input-point .port-label {
+  left: 15px;
+  transform: translateY(-50%);
+}
+
+.output-point .port-label {
+  right: 15px;
+  transform: translateY(-50%);
+}
+
+.input-point:hover .port-label, .output-point:hover .port-label {
+  opacity: 1;
+  transform: translateY(-50%) scale(1);
+}
+
+/* Connection path styles */
+.connection-path {
+  fill: none;
+  stroke: #3b82f6;
+  stroke-width: 3;
+  pointer-events: all;
+  cursor: pointer;
+  transition: stroke-width 0.2s ease, filter 0.2s ease;
+  /* Add animation for data flow */
+  stroke-dashoffset: 0;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+  opacity: 0.9;
+}
+
+.connection-path:hover {
+  stroke-width: 5;
+  filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.7));
+  z-index: 20;
+  opacity: 1;
+}
+
+.connection-path.selected {
+  stroke: #f97316;
+  stroke-width: 5;
+  filter: drop-shadow(0 0 8px rgba(249, 115, 22, 0.7));
+  z-index: 25;
+  opacity: 1;
+}
+
+/* Animation for data flow */
+@keyframes flowAnimation {
+  to {
+    stroke-dashoffset: -20;
+  }
+}
+
+/* Connection types with animations */
+.connection-path[data-from-type="trigger"] {
+  stroke: #ec4899;
+  stroke-dasharray: 5,3;
+  animation: flowAnimation 1s linear infinite;
+}
+
+.connection-path[data-from-type="string"] {
+  stroke: #60a5fa;
+  stroke-dasharray: 10,2;
+  animation: flowAnimation 2s linear infinite;
+}
+
+.connection-path[data-from-type="number"] {
+  stroke: #a78bfa;
+  stroke-dasharray: 8,2;
+  animation: flowAnimation 1.5s linear infinite;
+}
+
+.connection-path[data-from-type="boolean"] {
+  stroke: #f87171;
+  stroke-dasharray: 4,2,1,2;
+  animation: flowAnimation 1.5s linear infinite;
+}
+
+.connection-path[data-from-type="object"] {
+  stroke: #4ade80;
+  stroke-dasharray: 12,3;
+  animation: flowAnimation 2.5s linear infinite;
+}
+
+.connection-path[data-from-type="array"] {
+  stroke: #fbbf24;
+  stroke-dasharray: 8,2,2,2;
+  animation: flowAnimation 2s linear infinite;
+}
+
+.connection-path[data-from-type="any"] {
+  stroke: #9ca3af;
+  stroke-dasharray: 3,3;
+  animation: flowAnimation 1.5s linear infinite;
+}
+
+/* Connection label */
+.connection-label {
+  font-size: 10px;
+  pointer-events: none;
+}
+
+/* Type-specific node port colors */
+.input-point[data-type="trigger"], .output-point[data-type="trigger"] {
+  border-color: #ec4899;
+}
+
+.input-point[data-type="string"], .output-point[data-type="string"] {
+  border-color: #60a5fa;
+}
+
+.input-point[data-type="number"], .output-point[data-type="number"] {
+  border-color: #a78bfa;
+}
+
+.input-point[data-type="boolean"], .output-point[data-type="boolean"] {
+  border-color: #f87171;
+}
+
+.input-point[data-type="object"], .output-point[data-type="object"] {
+  border-color: #4ade80;
+}
+
+.input-point[data-type="array"], .output-point[data-type="array"] {
+  border-color: #fbbf24;
+}
+
+.input-point[data-type="any"], .output-point[data-type="any"] {
+  border-color: #9ca3af;
+}
+
+/* Workflow node styles */
+.workflow-node {
+  position: absolute;
+  background-color: white;
+  border-radius: 6px;
+  overflow: visible; /* Changed from hidden to visible to show connection points */
+  user-select: none;
+  pointer-events: all !important;
+  cursor: move;
+  will-change: transform;
+  touch-action: none;
+}
+
+/* Add a subtle highlight to connection points when node is hovered */
+.workflow-node:hover .input-point {
+  transform: translate(-50%, -50%) scale(1.1);
+  box-shadow: 0 0 8px 2px rgba(59, 130, 246, 0.5);
+}
+
+.workflow-node:hover .output-point {
+  transform: translate(50%, -50%) scale(1.1);
+  box-shadow: 0 0 8px 2px rgba(59, 130, 246, 0.5);
+}
+
+.workflow-node.selected {
+  outline: none;
+}
+
+.workflow-node.dragging {
+  opacity: 0.8;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+}
+
+.node-header {
+  cursor: move;
+  touch-action: none;
+}

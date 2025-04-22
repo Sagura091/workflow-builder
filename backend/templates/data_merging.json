@@ -1,0 +1,76 @@
+{
+  "id": "data_merging",
+  "name": "Data Merging Workflow",
+  "description": "A workflow for merging data from multiple sources",
+  "category": "data_processing",
+  "difficulty": "intermediate",
+  "tags": ["data", "merge", "intermediate"],
+  "preview_image_url": null,
+  "created_by": "system",
+  "created_at": "2023-01-01T00:00:00",
+  "usage_count": 0,
+  "workflow": {
+    "nodes": [
+      {
+        "id": "node1",
+        "type": "text_processor",
+        "position": {
+          "x": 100,
+          "y": 100
+        },
+        "data": {
+          "config": {
+            "operation": "uppercase",
+            "prefix": "",
+            "suffix": ""
+          }
+        }
+      },
+      {
+        "id": "node2",
+        "type": "text_processor",
+        "position": {
+          "x": 100,
+          "y": 300
+        },
+        "data": {
+          "config": {
+            "operation": "lowercase",
+            "prefix": "",
+            "suffix": ""
+          }
+        }
+      },
+      {
+        "id": "node3",
+        "type": "data_merger",
+        "position": {
+          "x": 400,
+          "y": 200
+        },
+        "data": {
+          "config": {
+            "merge_mode": "concat",
+            "flatten": false
+          }
+        }
+      }
+    ],
+    "connections": [
+      {
+        "id": "conn1",
+        "source": "node1",
+        "sourceHandle": "result",
+        "target": "node3",
+        "targetHandle": "input1"
+      },
+      {
+        "id": "conn2",
+        "source": "node2",
+        "sourceHandle": "result",
+        "target": "node3",
+        "targetHandle": "input2"
+      }
+    ]
+  }
+}

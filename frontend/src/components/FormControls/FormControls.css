@@ -1,0 +1,207 @@
+/* Common form control styles */
+.form-control-container {
+  margin-bottom: 1rem;
+  width: 100%;
+}
+
+/* Code Editor */
+.code-editor-container {
+  position: relative;
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  overflow: hidden;
+  font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.code-editor-container.focused {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+.code-editor-textarea {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0.75rem;
+  color: transparent;
+  background: transparent;
+  caret-color: #374151;
+  resize: none;
+  border: none;
+  outline: none;
+  z-index: 2;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  tab-size: 2;
+}
+
+.code-editor-highlight {
+  position: relative;
+  margin: 0;
+  padding: 0.75rem;
+  pointer-events: none;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  z-index: 1;
+  overflow: auto;
+  height: 100%;
+}
+
+/* Syntax highlighting */
+.language-javascript {
+  color: #374151;
+}
+
+.language-javascript .keyword {
+  color: #8b5cf6;
+}
+
+.language-javascript .string {
+  color: #10b981;
+}
+
+.language-javascript .number {
+  color: #f59e0b;
+}
+
+.language-javascript .comment {
+  color: #9ca3af;
+  font-style: italic;
+}
+
+.language-json {
+  color: #374151;
+}
+
+.language-json .key {
+  color: #8b5cf6;
+}
+
+.language-json .string {
+  color: #10b981;
+}
+
+.language-json .number {
+  color: #f59e0b;
+}
+
+.language-json .boolean {
+  color: #ef4444;
+}
+
+.language-json .null {
+  color: #6b7280;
+}
+
+/* Color Picker */
+.color-picker-container {
+  position: relative;
+  width: 100%;
+}
+
+.color-picker-preview {
+  display: flex;
+  align-items: center;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  padding: 0.5rem;
+  cursor: pointer;
+  background-color: #fff;
+}
+
+.color-swatch {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  margin-right: 0.5rem;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.color-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+  font-size: 0.875rem;
+}
+
+.color-picker-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  background-color: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  padding: 0.75rem;
+  margin-top: 0.25rem;
+  z-index: 10;
+}
+
+.color-palette {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.color-option {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  transition: transform 0.1s ease-in-out;
+}
+
+.color-option:hover {
+  transform: scale(1.1);
+}
+
+.color-picker-input {
+  width: 100%;
+  height: 32px;
+  border: none;
+  outline: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+/* Dark mode styles */
+.dark .code-editor-container {
+  border-color: #4b5563;
+  background-color: #1f2937;
+}
+
+.dark .code-editor-textarea {
+  caret-color: #e5e7eb;
+}
+
+.dark .language-javascript,
+.dark .language-json {
+  color: #e5e7eb;
+}
+
+.dark .color-picker-preview {
+  border-color: #4b5563;
+  background-color: #1f2937;
+}
+
+.dark .color-input {
+  background-color: #1f2937;
+  color: #e5e7eb;
+}
+
+.dark .color-picker-dropdown {
+  background-color: #1f2937;
+  border-color: #4b5563;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+}

@@ -1,0 +1,250 @@
+{
+  "id": "type_conversion_example",
+  "name": "Type Conversion Example",
+  "description": "A workflow demonstrating type conversions",
+  "nodes": [
+    {
+      "id": "node1",
+      "type": "core.begin",
+      "x": 100,
+      "y": 300,
+      "config": {}
+    },
+    {
+      "id": "node2",
+      "type": "core.text_input",
+      "x": 400,
+      "y": 100,
+      "config": {
+        "text": "42"
+      }
+    },
+    {
+      "id": "node3",
+      "type": "core.number_converter",
+      "x": 700,
+      "y": 100,
+      "config": {}
+    },
+    {
+      "id": "node4",
+      "type": "core.text_input",
+      "x": 400,
+      "y": 300,
+      "config": {
+        "text": "true"
+      }
+    },
+    {
+      "id": "node5",
+      "type": "core.boolean_converter",
+      "x": 700,
+      "y": 300,
+      "config": {}
+    },
+    {
+      "id": "node6",
+      "type": "core.text_input",
+      "x": 400,
+      "y": 500,
+      "config": {
+        "text": "apple,banana,cherry"
+      }
+    },
+    {
+      "id": "node7",
+      "type": "core.array_converter",
+      "x": 700,
+      "y": 500,
+      "config": {}
+    },
+    {
+      "id": "node8",
+      "type": "core.conditional",
+      "x": 1000,
+      "y": 300,
+      "config": {}
+    },
+    {
+      "id": "node9",
+      "type": "core.text_output",
+      "x": 1300,
+      "y": 200,
+      "config": {
+        "label": "True Path"
+      }
+    },
+    {
+      "id": "node10",
+      "type": "core.text_output",
+      "x": 1300,
+      "y": 400,
+      "config": {
+        "label": "False Path"
+      }
+    },
+    {
+      "id": "node11",
+      "type": "core.end",
+      "x": 1600,
+      "y": 300,
+      "config": {}
+    }
+  ],
+  "connections": [
+    {
+      "id": "conn1",
+      "from": {
+        "nodeId": "node1",
+        "port": "trigger"
+      },
+      "to": {
+        "nodeId": "node2",
+        "port": "trigger"
+      }
+    },
+    {
+      "id": "conn2",
+      "from": {
+        "nodeId": "node1",
+        "port": "trigger"
+      },
+      "to": {
+        "nodeId": "node4",
+        "port": "trigger"
+      }
+    },
+    {
+      "id": "conn3",
+      "from": {
+        "nodeId": "node1",
+        "port": "trigger"
+      },
+      "to": {
+        "nodeId": "node6",
+        "port": "trigger"
+      }
+    },
+    {
+      "id": "conn4",
+      "from": {
+        "nodeId": "node2",
+        "port": "text"
+      },
+      "to": {
+        "nodeId": "node3",
+        "port": "input"
+      }
+    },
+    {
+      "id": "conn5",
+      "from": {
+        "nodeId": "node4",
+        "port": "text"
+      },
+      "to": {
+        "nodeId": "node5",
+        "port": "input"
+      }
+    },
+    {
+      "id": "conn6",
+      "from": {
+        "nodeId": "node6",
+        "port": "text"
+      },
+      "to": {
+        "nodeId": "node7",
+        "port": "input"
+      }
+    },
+    {
+      "id": "conn7",
+      "from": {
+        "nodeId": "node3",
+        "port": "number"
+      },
+      "to": {
+        "nodeId": "node8",
+        "port": "value"
+      }
+    },
+    {
+      "id": "conn8",
+      "from": {
+        "nodeId": "node5",
+        "port": "boolean"
+      },
+      "to": {
+        "nodeId": "node8",
+        "port": "compare_to"
+      }
+    },
+    {
+      "id": "conn9",
+      "from": {
+        "nodeId": "node7",
+        "port": "array"
+      },
+      "to": {
+        "nodeId": "node9",
+        "port": "text"
+      }
+    },
+    {
+      "id": "conn10",
+      "from": {
+        "nodeId": "node8",
+        "port": "true_output"
+      },
+      "to": {
+        "nodeId": "node9",
+        "port": "trigger"
+      }
+    },
+    {
+      "id": "conn11",
+      "from": {
+        "nodeId": "node8",
+        "port": "false_output"
+      },
+      "to": {
+        "nodeId": "node10",
+        "port": "trigger"
+      }
+    },
+    {
+      "id": "conn12",
+      "from": {
+        "nodeId": "node7",
+        "port": "array"
+      },
+      "to": {
+        "nodeId": "node10",
+        "port": "text"
+      }
+    },
+    {
+      "id": "conn13",
+      "from": {
+        "nodeId": "node9",
+        "port": "text"
+      },
+      "to": {
+        "nodeId": "node11",
+        "port": "result"
+      }
+    },
+    {
+      "id": "conn14",
+      "from": {
+        "nodeId": "node10",
+        "port": "text"
+      },
+      "to": {
+        "nodeId": "node11",
+        "port": "result"
+      }
+    }
+  ]
+}

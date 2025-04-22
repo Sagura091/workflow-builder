@@ -1,0 +1,98 @@
+[
+  {
+    "id": "core.begin",
+    "name": "Begin",
+    "category": "CONTROL_FLOW",
+    "description": "Starting point of the workflow",
+    "inputs": [],
+    "outputs": [
+      { "id": "trigger", "name": "Trigger", "type": "trigger", "ui_properties": { "position": "right-top" } },
+      { "id": "workflow_id", "name": "Workflow ID", "type": "string", "ui_properties": { "position": "right-center" } },
+      { "id": "timestamp", "name": "Timestamp", "type": "number", "ui_properties": { "position": "right-bottom" } }
+    ],
+    "ui_properties": {
+      "color": "#2ecc71",
+      "icon": "play",
+      "width": 240
+    }
+  },
+  {
+    "id": "core.end",
+    "name": "End",
+    "category": "CONTROL_FLOW",
+    "description": "Ending point of the workflow",
+    "inputs": [
+      { "id": "trigger", "name": "Trigger", "type": "trigger", "required": true, "ui_properties": { "position": "left-top" } },
+      { "id": "result", "name": "Result", "type": "any", "ui_properties": { "position": "left-center" } }
+    ],
+    "outputs": [
+      { "id": "workflow_id", "name": "Workflow ID", "type": "string", "ui_properties": { "position": "right-top" } },
+      { "id": "execution_time", "name": "Execution Time", "type": "number", "ui_properties": { "position": "right-center" } }
+    ],
+    "ui_properties": {
+      "color": "#e74c3c",
+      "icon": "stop",
+      "width": 240
+    }
+  },
+  {
+    "id": "core.conditional",
+    "name": "Conditional",
+    "category": "CONTROL_FLOW",
+    "description": "Branch workflow based on conditions",
+    "inputs": [
+      { "id": "value", "name": "Value", "type": "any", "required": true, "ui_properties": { "position": "left-top" } },
+      { "id": "compare_to", "name": "Compare To", "type": "any", "ui_properties": { "position": "left-bottom" } }
+    ],
+    "outputs": [
+      { "id": "true_output", "name": "True", "type": "any", "ui_properties": { "position": "right-top" } },
+      { "id": "false_output", "name": "False", "type": "any", "ui_properties": { "position": "right-bottom" } },
+      { "id": "result", "name": "Result", "type": "boolean", "ui_properties": { "position": "right-center" } }
+    ],
+    "ui_properties": {
+      "color": "#e74c3c",
+      "icon": "code-branch",
+      "width": 240
+    }
+  },
+  {
+    "id": "core.text_input",
+    "name": "Text Input",
+    "category": "TEXT",
+    "description": "Enter text manually",
+    "inputs": [
+      { "id": "variables", "name": "Variables", "type": "object", "ui_properties": { "position": "left-center" } },
+      { "id": "override", "name": "Override", "type": "string", "ui_properties": { "position": "left-bottom" } }
+    ],
+    "outputs": [
+      { "id": "text", "name": "Text", "type": "string", "ui_properties": { "position": "right-top" } },
+      { "id": "length", "name": "Length", "type": "number", "ui_properties": { "position": "right-center" } },
+      { "id": "is_empty", "name": "Is Empty", "type": "boolean", "ui_properties": { "position": "right-bottom" } }
+    ],
+    "ui_properties": {
+      "color": "#3498db",
+      "icon": "font",
+      "width": 240
+    }
+  },
+  {
+    "id": "core.text_output",
+    "name": "Text Output",
+    "category": "TEXT",
+    "description": "Display text results",
+    "inputs": [
+      { "id": "text", "name": "Text", "type": "string", "required": true, "ui_properties": { "position": "left-top" } },
+      { "id": "label", "name": "Label", "type": "string", "ui_properties": { "position": "left-center" } },
+      { "id": "trigger", "name": "Trigger", "type": "trigger", "ui_properties": { "position": "left-bottom" } }
+    ],
+    "outputs": [
+      { "id": "text", "name": "Text", "type": "string", "ui_properties": { "position": "right-top" } },
+      { "id": "length", "name": "Length", "type": "number", "ui_properties": { "position": "right-center" } }
+    ],
+    "ui_properties": {
+      "color": "#e74c3c",
+      "icon": "comment",
+      "width": 240
+    }
+  }
+]

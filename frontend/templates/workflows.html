@@ -1,0 +1,1883 @@
+{% extends "layout.html" %}
+{% block head %}
+<style>
+    /* Workflow Builder Styles */
+    .workflow-node {
+        z-index: 10;
+        transition: all 0.2s ease;
+    }
+
+    .leader-line {
+        z-index: 5;
+    }
+
+    body.connecting {
+        cursor: crosshair;
+    }
+
+    .component-item {
+        transition: transform 0.1s;
+    }
+
+    .component-item.dragging {
+        transform: scale(1.05);
+        opacity: 0.8;
+    }
+
+    .input-point,
+    .output-point {
+        transition: all 0.2s;
+        position: relative;
+    }
+
+    .input-point:hover,
+    .output-point:hover {
+        transform: scale(1.5);
+    }
+
+    .input-point:hover::after,
+    .output-point:hover::after {
+        content: attr(data-port);
+        position: absolute;
+        background: #333;
+        color: white;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 10px;
+        white-space: nowrap;
+        z-index: 100;
+    }
+
+    .input-point:hover::after {
+        left: 10px;
+        top: -5px;
+    }
+
+    .output-point:hover::after {
+        right: 10px;
+        top: -5px;
+    }
+
+    #workflow-canvas.drop-active {
+        background-color: rgba(219, 234, 254, 0.5);
+    }
+
+    #workflow-canvas.drop-target {
+        background-color: rgba(219, 234, 254, 1);
+    }
+
+    /* Add this to your styles section */
+    .component-item.can-drop {
+        box-shadow: 0 0 0 2px #3b82f6;
+    }
+
+    .workflow-canvas.drop-target {
+        background-color: #f0f9ff !important;
+        /* Light blue background when hovering */
+    }
+
+    .workflow-node .connection-points {
+        opacity: 0.2;
+        transition: opacity 0.2s;
+    }
+
+    .workflow-node:hover .connection-points {
+        opacity: 1;
+    }
+
+    .component-item.dragging {
+        opacity: 0.6;
+        transform: scale(1.05);
+        z-index: 1000;
+        cursor: grabbing !important;
+    }
+
+    #workflow-canvas.drop-target {
+        background-color: rgba(219, 234, 254, 0.8) !important;
+        box-shadow: inset 0 0 0 2px #3b82f6;
+    }
+
+    .component-item.can-drop {
+        box-shadow: 0 0 0 2px #10B981;
+    }
+
+    /* Node states */
+    .workflow-node.selected {
+        box-shadow: 0 0 0 2px #3b82f6, 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .workflow-node.running {
+        box-shadow: 0 0 0 2px #f59e0b, 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .workflow-node.error {
+        box-shadow: 0 0 0 2px #ef4444, 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .workflow-node.success {
+        box-shadow: 0 0 0 2px #10b981, 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Connection styles */
+    .connection-label {
+        background: white;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 10px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Canvas controls */
+    #canvas-controls {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        background: white;
+        border-radius: 4px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        padding: 5px;
+        display: flex;
+        gap: 5px;
+    }
+
+    /* Mini-map */
+    #workflow-minimap {
+        position: absolute;
+        bottom: 10px;
+        left: 10px;
+        width: 150px;
+        height: 100px;
+        background: white;
+        border-radius: 4px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        border: 1px solid #e5e7eb;
+    }
+
+    #minimap-content {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        transform-origin: 0 0;
+    }
+
+    .minimap-node {
+        position: absolute;
+        background: #e5e7eb;
+        border-radius: 2px;
+    }
+
+    .minimap-viewport {
+        position: absolute;
+        border: 1px solid #3b82f6;
+        background: rgba(59, 130, 246, 0.1);
+    }
+
+    /* Grid background */
+    #workflow-canvas {
+        background-image: radial-gradient(circle, #d1d5db 1px, transparent 1px);
+        background-size: 20px 20px;
+    }
+
+    /* Connection menu */
+    .connection-menu {
+        position: absolute;
+        background: white;
+        border-radius: 4px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        padding: 5px;
+        z-index: 100;
+    }
+
+    .connection-menu button {
+        display: block;
+        width: 100%;
+        text-align: left;
+        padding: 5px 10px;
+        border: none;
+        background: none;
+        cursor: pointer;
+        border-radius: 2px;
+    }
+
+    .connection-menu button:hover {
+        background: #f3f4f6;
+    }
+
+    /* Node resize handle */
+    .resize-handle {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        bottom: 0;
+        right: 0;
+        cursor: nwse-resize;
+        background: #e5e7eb;
+        border-radius: 2px 0 4px 0;
+    }
+</style>
+{% endblock %}
+{% block title %}ML Workflows - MLOps Pipeline Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mx-auto">
+    <!-- Workflow Header -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800">ML Workflows</h1>
+                <p class="text-gray-600 mt-1">Design, manage and execute machine learning pipelines</p>
+            </div>
+            <div class="flex space-x-2">
+                <button id="new-workflow-btn"
+                    class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition">
+                    <i class="fas fa-plus mr-2"></i> New Workflow
+                </button>
+                <button id="import-workflow-btn"
+                    class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
+                    <i class="fas fa-file-import mr-2"></i> Import
+                </button>
+                <button id="load-workflow-btn"
+                    class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition">
+                    <i class="fas fa-folder-open mr-2"></i> Load
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Workflow Builder Container -->
+    <div class="grid grid-cols-12 gap-6">
+        <!-- Sidebar with components -->
+        <div class="col-span-3">
+            <div class="bg-white rounded-lg shadow-md p-4">
+                <h2 class="text-lg font-semibold text-gray-700 mb-4">Workflow Components</h2>
+
+                <!-- Search components -->
+                <div class="mb-4">
+                    <input type="text" id="component-search" placeholder="Search components..."
+                        class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div class="mb-4">
+                    <h3 class="text-sm font-medium text-gray-700 mb-2">Data Preparation</h3>
+                    <div class="space-y-2">
+                        <div class="component-item p-2 bg-gray-50 rounded border cursor-move" data-type="data_loader">
+                            <div class="flex items-center">
+                                <i class="fas fa-database text-blue-500 mr-2"></i>
+                                <div>
+                                    <div class="text-sm font-medium">Data Loader</div>
+                                    <div class="text-xs text-gray-500">Load dataset from source</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="component-item p-2 bg-gray-50 rounded border cursor-move"
+                            data-type="data_transform">
+                            <div class="flex items-center">
+                                <i class="fas fa-filter text-green-500 mr-2"></i>
+                                <div>
+                                    <div class="text-sm font-medium">Data Transform</div>
+                                    <div class="text-xs text-gray-500">Apply transformations</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="component-item p-2 bg-gray-50 rounded border cursor-move"
+                            data-type="feature_engineering">
+                            <div class="flex items-center">
+                                <i class="fas fa-cogs text-purple-500 mr-2"></i>
+                                <div>
+                                    <div class="text-sm font-medium">Feature Engineering</div>
+                                    <div class="text-xs text-gray-500">Create and select features</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <h3 class="text-sm font-medium text-gray-700 mb-2">Models</h3>
+                    <div class="space-y-2">
+                        <div class="component-item p-2 bg-gray-50 rounded border cursor-move" data-type="train_model">
+                            <div class="flex items-center">
+                                <i class="fas fa-brain text-red-500 mr-2"></i>
+                                <div>
+                                    <div class="text-sm font-medium">Train Model</div>
+                                    <div class="text-xs text-gray-500">Train ML model</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="component-item p-2 bg-gray-50 rounded border cursor-move" data-type="evaluate">
+                            <div class="flex items-center">
+                                <i class="fas fa-chart-line text-indigo-500 mr-2"></i>
+                                <div>
+                                    <div class="text-sm font-medium">Evaluate</div>
+                                    <div class="text-xs text-gray-500">Evaluate model performance</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="component-item p-2 bg-gray-50 rounded border cursor-move" data-type="predict">
+                            <div class="flex items-center">
+                                <i class="fas fa-magic text-amber-500 mr-2"></i>
+                                <div>
+                                    <div class="text-sm font-medium">Predict</div>
+                                    <div class="text-xs text-gray-500">Make predictions</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <h3 class="text-sm font-medium text-gray-700 mb-2">Deployment</h3>
+                    <div class="space-y-2">
+                        <div class="component-item p-2 bg-gray-50 rounded border cursor-move" data-type="deploy_model">
+                            <div class="flex items-center">
+                                <i class="fas fa-rocket text-blue-500 mr-2"></i>
+                                <div>
+                                    <div class="text-sm font-medium">Deploy Model</div>
+                                    <div class="text-xs text-gray-500">Deploy to production</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="component-item p-2 bg-gray-50 rounded border cursor-move" data-type="monitoring">
+                            <div class="flex items-center">
+                                <i class="fas fa-heartbeat text-red-500 mr-2"></i>
+                                <div>
+                                    <div class="text-sm font-medium">Monitoring</div>
+                                    <div class="text-xs text-gray-500">Monitor model metrics</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Workflow Canvas -->
+        <div class="col-span-9">
+            <div class="bg-white rounded-lg shadow-md">
+                <!-- Toolbar -->
+                <div class="border-b p-4 flex justify-between items-center">
+                    <div class="flex items-center">
+                        <input type="text" id="workflow-name" placeholder="Untitled Workflow"
+                            class="border-b border-dashed border-gray-300 bg-transparent px-2 py-1 font-medium text-lg focus:outline-none focus:border-blue-500">
+                    </div>
+
+                    <div class="flex space-x-2">
+                        <button id="save-workflow-btn"
+                            class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">
+                            <i class="fas fa-save mr-1"></i> Save
+                        </button>
+                        <button id="execute-workflow-btn"
+                            class="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm">
+                            <i class="fas fa-play mr-1"></i> Execute
+                        </button>
+                        <button id="export-workflow-btn"
+                            class="px-3 py-1 bg-purple-600 text-white rounded hover:bg-purple-700 text-sm">
+                            <i class="fas fa-file-export mr-1"></i> Export
+                        </button>
+                        <button id="clear-canvas-btn"
+                            class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm">
+                            <i class="fas fa-trash-alt mr-1"></i> Clear
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Canvas for workflow diagram -->
+                <div class="p-4 bg-gray-50 min-h-[600px] relative" id="workflow-canvas">
+                    <div class="absolute inset-0 flex items-center justify-center text-gray-400"
+                        id="canvas-placeholder">
+                        <div class="text-center">
+                            <i class="fas fa-project-diagram text-5xl mb-2"></i>
+                            <p>Drag components here to build your workflow</p>
+                        </div>
+                    </div>
+
+                    <!-- Canvas controls -->
+                    <div id="canvas-controls" class="flex space-x-1">
+                        <button id="zoom-in-btn" class="p-1 hover:bg-gray-100 rounded" title="Zoom In">
+                            <i class="fas fa-search-plus"></i>
+                        </button>
+                        <button id="zoom-out-btn" class="p-1 hover:bg-gray-100 rounded" title="Zoom Out">
+                            <i class="fas fa-search-minus"></i>
+                        </button>
+                        <button id="zoom-reset-btn" class="p-1 hover:bg-gray-100 rounded" title="Reset Zoom">
+                            <i class="fas fa-compress-arrows-alt"></i>
+                        </button>
+                        <div class="border-r border-gray-300 mx-1 h-6"></div>
+                        <button id="undo-btn" class="p-1 hover:bg-gray-100 rounded" title="Undo">
+                            <i class="fas fa-undo"></i>
+                        </button>
+                        <button id="redo-btn" class="p-1 hover:bg-gray-100 rounded" title="Redo">
+                            <i class="fas fa-redo"></i>
+                        </button>
+                        <div class="border-r border-gray-300 mx-1 h-6"></div>
+                        <button id="validate-btn" class="p-1 hover:bg-gray-100 rounded" title="Validate Workflow">
+                            <i class="fas fa-check-circle"></i>
+                        </button>
+                    </div>
+
+                    <!-- Mini-map -->
+                    <div id="workflow-minimap">
+                        <div id="minimap-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Workflow Execution Panel -->
+            <div class="bg-white rounded-lg shadow-md p-4 mt-6 hidden" id="execution-panel">
+                <h2 class="text-lg font-semibold text-gray-700 mb-4">Workflow Execution</h2>
+                <div class="flex justify-between items-center mb-4">
+                    <div>
+                        <span class="text-sm font-medium text-gray-700">Status:</span>
+                        <span id="workflow-status"
+                            class="ml-2 px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">Pending</span>
+                    </div>
+                    <div>
+                        <button id="stop-execution-btn"
+                            class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm">
+                            <i class="fas fa-stop mr-1"></i> Stop Execution
+                        </button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead>
+                            <tr>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Step</th>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Duration
+                                </th>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Details</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200" id="execution-log">
+                            <!-- Execution steps will be added here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Node editor modal -->
+<div id="node-editor-modal"
+    class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-xl p-6 max-w-md w-full">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold" id="node-editor-title">Edit Node</h3>
+            <button id="close-node-editor" class="text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div id="node-editor-content">
+            <!-- Form fields will be dynamically added here based on node type -->
+        </div>
+
+        <div class="mt-6 flex justify-end space-x-2">
+            <button id="node-editor-cancel" class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">
+                Cancel
+            </button>
+            <button id="node-editor-save" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                Save Changes
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/leader-line-new@1.1.9/leader-line.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/panzoom@9.4.0/dist/panzoom.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Global state
+        const state = {
+            nodes: [],
+            connections: [],
+            currentNodeId: 0,
+            selectedNode: null,
+            draggedNode: null,
+            isExecuting: false,
+            lines: [],
+            currentWorkflow: {
+                id: null,
+                name: "Untitled Workflow"
+            },
+            tempConnection: null,
+            zoom: {
+                level: 1,
+                min: 0.5,
+                max: 2,
+                step: 0.1
+            },
+            history: {
+                past: [],
+                future: []
+            },
+            connectionStyle: 'fluid', // fluid, straight, grid
+            selectedConnection: null,
+            validationErrors: []
+        };
+
+        // All of your nodeTypes definitions remain the same
+        const nodeTypes = {
+            data_loader: {
+                title: "Data Loader",
+                icon: "fa-database",
+                color: "blue",
+                inputs: [],
+                outputs: ["data"],
+                configFields: [
+                    { name: "data_source", label: "Data Source", type: "text", placeholder: "Enter data source path or URL" },
+                    { name: "format", label: "Format", type: "select", options: ["CSV", "JSON", "Parquet", "SQL"] }
+                ]
+            },
+            data_transform: {
+                title: "Data Transform",
+                icon: "fa-filter",
+                color: "green",
+                inputs: ["data"],
+                outputs: ["transformed_data"],
+                configFields: [
+                    { name: "transform_type", label: "Transform Type", type: "select", options: ["Normalize", "Standardize", "One-Hot Encode", "Missing Values"] },
+                    { name: "params", label: "Parameters", type: "textarea", placeholder: "Transform parameters in JSON format" }
+                ]
+            },
+            feature_engineering: {
+                title: "Feature Engineering",
+                icon: "fa-cogs",
+                color: "purple",
+                inputs: ["data"],
+                outputs: ["features"],
+                configFields: [
+                    { name: "feature_methods", label: "Feature Methods", type: "select", multiple: true, options: ["PCA", "Feature Selection", "Aggregation", "Custom"] },
+                    { name: "settings", label: "Settings", type: "textarea", placeholder: "Feature engineering settings" }
+                ]
+            },
+            train_model: {
+                title: "Train Model",
+                icon: "fa-brain",
+                color: "red",
+                inputs: ["features", "labels"],
+                outputs: ["model"],
+                configFields: [
+                    { name: "model_type", label: "Model Type", type: "select", options: ["Linear", "Random Forest", "Neural Network", "SVM", "Custom"] },
+                    { name: "hyperparams", label: "Hyperparameters", type: "textarea", placeholder: "Model hyperparameters in JSON format" },
+                    { name: "validation", label: "Use Validation", type: "checkbox" }
+                ]
+            },
+            evaluate: {
+                title: "Evaluate",
+                icon: "fa-chart-line",
+                color: "indigo",
+                inputs: ["model", "test_data"],
+                outputs: ["metrics"],
+                configFields: [
+                    { name: "metrics", label: "Metrics", type: "select", multiple: true, options: ["Accuracy", "Precision", "Recall", "F1", "ROC AUC", "MSE"] }
+                ]
+            },
+            predict: {
+                title: "Predict",
+                icon: "fa-magic",
+                color: "amber",
+                inputs: ["model", "data"],
+                outputs: ["predictions"],
+                configFields: [
+                    { name: "output_format", label: "Output Format", type: "select", options: ["JSON", "CSV", "Database"] },
+                    { name: "batch_size", label: "Batch Size", type: "number", min: 1, step: 10 }
+                ]
+            },
+            deploy_model: {
+                title: "Deploy Model",
+                icon: "fa-rocket",
+                color: "blue",
+                inputs: ["model"],
+                outputs: ["service"],
+                configFields: [
+                    { name: "service_name", label: "Service Name", type: "text" },
+                    { name: "replicas", label: "Replicas", type: "number", min: 1 },
+                    { name: "environment", label: "Environment", type: "select", options: ["Development", "Staging", "Production"] }
+                ]
+            },
+            monitoring: {
+                title: "Monitoring",
+                icon: "fa-heartbeat",
+                color: "red",
+                inputs: ["service", "predictions"],
+                outputs: [],
+                configFields: [
+                    { name: "alert_threshold", label: "Alert Threshold", type: "number" },
+                    { name: "metrics", label: "Metrics to Monitor", type: "select", multiple: true, options: ["Drift", "Latency", "Error Rate", "Usage"] }
+                ]
+            }
+        };
+
+        // Initialize the workflow canvas
+        initializeWorkflowBuilder();
+
+        // MAIN FUNCTION DEFINITIONS - SIMPLIFIED AND FLATTENED
+        function initializeWorkflowBuilder() {
+            // Initialize component drag-and-drop
+            initializeDragDrop();
+
+            // Initialize node connections
+            initializeConnections();
+
+            // Initialize button actions
+            initializeButtons();
+
+            // Initialize canvas controls
+            initializeCanvasControls();
+
+            // Initialize minimap
+            initializeMinimap();
+
+            // Initialize keyboard shortcuts
+            initializeKeyboardShortcuts();
+
+            // Initialize search functionality
+            document.getElementById('component-search').addEventListener('input', function (e) {
+                const searchTerm = e.target.value.toLowerCase();
+                document.querySelectorAll('.component-item').forEach(item => {
+                    const title = item.querySelector('.text-sm').textContent.toLowerCase();
+                    const desc = item.querySelector('.text-xs').textContent.toLowerCase();
+                    if (title.includes(searchTerm) || desc.includes(searchTerm)) {
+                        item.style.display = 'block';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            });
+
+            // Initialize context menu
+            initializeContextMenu();
+        }
+
+        // FIXED DRAG AND DROP IMPLEMENTATION
+        function initializeDragDrop() {
+            // Make components draggable
+            interact('.component-item').draggable({
+                inertia: false,
+                autoScroll: true,
+                onstart: function (event) {
+                    event.target.classList.add('dragging');
+                },
+                onmove: function (event) {
+                    const target = event.target;
+                    const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
+                    const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
+
+                    // Move the dragged element
+                    target.style.transform = `translate(${x}px, ${y}px)`;
+                    target.setAttribute('data-x', x);
+                    target.setAttribute('data-y', y);
+                },
+                onend: function (event) {
+                    const target = event.target;
+
+                    // Get the component type
+                    const componentType = target.getAttribute('data-type');
+
+                    // Reset the component element's position
+                    target.style.transform = 'translate(0px, 0px)';
+                    target.setAttribute('data-x', 0);
+                    target.setAttribute('data-y', 0);
+                    target.classList.remove('dragging');
+
+                    // Get canvas position
+                    const canvas = document.getElementById('workflow-canvas');
+                    const canvasRect = canvas.getBoundingClientRect();
+
+                    // Calculate drop position relative to canvas
+                    const dropX = event.clientX - canvasRect.left;
+                    const dropY = event.clientY - canvasRect.top;
+
+                    // Check if dropped inside the canvas boundaries
+                    if (dropX >= 0 && dropX <= canvasRect.width &&
+                        dropY >= 0 && dropY <= canvasRect.height) {
+                        // Create a new node at the drop position
+                        createNode(componentType, dropX, dropY);
+                    }
+                }
+            });
+
+            // Make the workflow canvas a dropzone
+            interact('#workflow-canvas').dropzone({
+                accept: '.component-item',
+                overlap: 0.3,
+                ondropactivate: function (event) {
+                    event.target.classList.add('drop-active');
+                },
+                ondragenter: function (event) {
+                    event.target.classList.add('drop-target');
+                    event.relatedTarget.classList.add('can-drop');
+
+                    // Hide placeholder when dragging over canvas
+                    document.getElementById('canvas-placeholder').style.display = 'none';
+                },
+                ondragleave: function (event) {
+                    event.target.classList.remove('drop-target');
+                    event.relatedTarget.classList.remove('can-drop');
+                },
+                ondropdeactivate: function (event) {
+                    event.target.classList.remove('drop-active', 'drop-target');
+                }
+            });
+        }
+
+        function dragMoveListener(event) {
+            const target = event.target;
+
+            // Keep the dragged position in the data-x/data-y attributes
+            const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
+            const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
+
+            // Translate the element
+            target.style.transform = `translate(${x}px, ${y}px)`;
+
+            // Update the position attributes
+            target.setAttribute('data-x', x);
+            target.setAttribute('data-y', y);
+        }
+
+        function createNode(type, x, y) {
+            const nodeId = `node-${state.currentNodeId++}`;
+            const nodeConfig = nodeTypes[type];
+
+            // Create node in DOM
+            const canvas = document.getElementById('workflow-canvas');
+            const nodeEl = document.createElement('div');
+            nodeEl.id = nodeId;
+            nodeEl.className = `workflow-node absolute bg-white rounded-lg shadow-md border-2 border-${nodeConfig.color}-500 w-60`;
+            nodeEl.style.left = `${x}px`;
+            nodeEl.style.top = `${y}px`;
+
+            // Add node content
+            nodeEl.innerHTML = `
+                <div class="p-3 bg-${nodeConfig.color}-50 border-b border-${nodeConfig.color}-200 flex justify-between items-center">
+                    <div class="flex items-center">
+                        <i class="fas ${nodeConfig.icon} text-${nodeConfig.color}-500 mr-2"></i>
+                        <span class="font-medium">${nodeConfig.title}</span>
+                    </div>
+                    <div class="flex space-x-1">
+                        <button class="edit-node-btn text-gray-500 hover:text-blue-500 p-1" title="Edit">
+                            <i class="fas fa-cog"></i>
+                        </button>
+                        <button class="delete-node-btn text-gray-500 hover:text-red-500 p-1" title="Delete">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="p-3 text-sm node-content">Configure this node...</div>
+                <div class="connection-points">
+                    ${nodeConfig.inputs.length > 0 ? `
+                        <div class="inputs absolute left-0 top-0 bottom-0 w-3 flex flex-col justify-evenly">
+                            ${nodeConfig.inputs.map(input => `
+                                <div class="input-point h-3 w-3 bg-gray-300 hover:bg-blue-500 rounded-full -ml-1.5 cursor-pointer"
+                                    data-port="${input}" title="Input: ${input}"></div>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                    ${nodeConfig.outputs.length > 0 ? `
+                        <div class="outputs absolute right-0 top-0 bottom-0 w-3 flex flex-col justify-evenly">
+                            ${nodeConfig.outputs.map(output => `
+                                <div class="output-point h-3 w-3 bg-gray-300 hover:bg-green-500 rounded-full -mr-1.5 cursor-pointer"
+                                    data-port="${output}" title="Output: ${output}"></div>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+
+            canvas.appendChild(nodeEl);
+
+            // Add node to state
+            state.nodes.push({
+                id: nodeId,
+                type: type,
+                x: x,
+                y: y,
+                config: {}
+            });
+
+            // Hide placeholder when nodes exist
+            document.getElementById('canvas-placeholder').style.display = 'none';
+
+            // Add event listeners
+            nodeEl.querySelector('.edit-node-btn').addEventListener('click', () => openNodeEditor(nodeId));
+            nodeEl.querySelector('.delete-node-btn').addEventListener('click', () => deleteNode(nodeId));
+
+            // Make node clickable for selection
+            nodeEl.addEventListener('click', (e) => {
+                if (!e.target.closest('button') && !e.target.classList.contains('input-point') && !e.target.classList.contains('output-point')) {
+                    selectNode(nodeId);
+                }
+            });
+
+            // Make the new node draggable
+            interact(`#${nodeId}`).draggable({
+                inertia: true,
+                autoScroll: true,
+                onstart: function (event) {
+                    state.draggedNode = nodeId;
+                    event.target.classList.add('dragging');
+                },
+                onmove: function (event) {
+                    const target = event.target;
+                    const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
+                    const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
+
+                    target.style.transform = `translate(${x}px, ${y}px)`;
+                    target.setAttribute('data-x', x);
+                    target.setAttribute('data-y', y);
+
+                    // Update connections
+                    redrawConnections();
+                },
+                onend: function (event) {
+                    event.target.classList.remove('dragging');
+                    state.draggedNode = null;
+
+                    // Update node position in state
+                    const index = state.nodes.findIndex(n => n.id === nodeId);
+                    if (index !== -1) {
+                        state.nodes[index].x = parseInt(event.target.style.left) + parseFloat(event.target.getAttribute('data-x') || 0);
+                        state.nodes[index].y = parseInt(event.target.style.top) + parseFloat(event.target.getAttribute('data-y') || 0);
+
+                        // Reset the transform
+                        event.target.style.transform = 'translate(0px, 0px)';
+                        event.target.setAttribute('data-x', 0);
+                        event.target.setAttribute('data-y', 0);
+
+                        // Explicitly set the position
+                        event.target.style.left = `${state.nodes[index].x}px`;
+                        event.target.style.top = `${state.nodes[index].y}px`;
+                    }
+                }
+            });
+
+            return nodeId;
+        }
+
+        // Keep the rest of your functions the same...
+        // Just make sure there are no duplicate function definitions or nested functions
+        function initializeConnections() {
+            // Setup connection drawing (with a slight delay to ensure DOM is ready)
+            setTimeout(() => {
+                // Set up click listeners for input/output points
+                document.addEventListener('click', (e) => {
+                    // Handle output points (starting connections)
+                    if (e.target.classList.contains('output-point')) {
+                        const outputPoint = e.target;
+                        const nodeEl = outputPoint.closest('.workflow-node');
+                        const outputPort = outputPoint.getAttribute('data-port');
+
+                        // Start temporary connection
+                        state.tempConnection = {
+                            fromNodeId: nodeEl.id,
+                            fromPort: outputPort,
+                            fromEl: outputPoint
+                        };
+
+                        // Add connecting class to show we're making a connection
+                        document.body.classList.add('connecting');
+                    }
+                    // Handle input points (finishing connections)
+                    else if (e.target.classList.contains('input-point') && state.tempConnection) {
+                        const inputPoint = e.target;
+                        const nodeEl = inputPoint.closest('.workflow-node');
+                        const inputPort = inputPoint.getAttribute('data-port');
+
+                        // Don't connect to the same node
+                        if (nodeEl.id === state.tempConnection.fromNodeId) {
+                            state.tempConnection = null;
+                            document.body.classList.remove('connecting');
+                            return;
+                        }
+
+                        // Create connection
+                        const connection = {
+                            from: {
+                                nodeId: state.tempConnection.fromNodeId,
+                                port: state.tempConnection.fromPort,
+                                el: state.tempConnection.fromEl
+                            },
+                            to: {
+                                nodeId: nodeEl.id,
+                                port: inputPort,
+                                el: inputPoint
+                            }
+                        };
+
+                        // Create the leader line
+                        connection.line = new LeaderLine(
+                            state.tempConnection.fromEl,
+                            inputPoint,
+                            {
+                                color: '#3b82f6',
+                                size: 2,
+                                endPlug: 'arrow2',
+                                path: 'fluid',
+                                startSocket: 'right',
+                                endSocket: 'left'
+                            }
+                        );
+
+                        // Add to state
+                        state.connections.push(connection);
+
+                        // Clear the temporary connection
+                        state.tempConnection = null;
+                        document.body.classList.remove('connecting');
+                    }
+                    // Cancel connection if clicked elsewhere
+                    else if (state.tempConnection) {
+                        state.tempConnection = null;
+                        document.body.classList.remove('connecting');
+                    }
+                });
+            }, 100);
+        }
+
+
+        function openNodeEditor(nodeId) {
+            const node = state.nodes.find(n => n.id === nodeId);
+            if (!node) return;
+
+            const nodeType = node.type;
+            const nodeConfig = nodeTypes[nodeType];
+
+            const modal = document.getElementById('node-editor-modal');
+            const title = document.getElementById('node-editor-title');
+            const content = document.getElementById('node-editor-content');
+
+            // Set title
+            title.textContent = `Edit ${nodeConfig.title}`;
+
+            // Build form based on node type
+            let formHtml = '';
+            for (const field of nodeConfig.configFields) {
+                const fieldValue = node.config[field.name] || '';
+
+                formHtml += `<div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">${field.label}</label>`;
+
+                if (field.type === 'text') {
+                    formHtml += `<input type="text" name="${field.name}" value="${fieldValue}"
+                placeholder="${field.placeholder || ''}"
+                class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">`;
+                }
+                else if (field.type === 'number') {
+                    formHtml += `<input type="number" name="${field.name}" value="${fieldValue}"
+                min="${field.min || 0}" step="${field.step || 1}"
+                class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">`;
+                }
+                else if (field.type === 'select') {
+                    formHtml += `<select name="${field.name}" class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                ${field.multiple ? 'multiple' : ''}>`;
+
+                    for (const option of field.options) {
+                        const selected = Array.isArray(fieldValue)
+                            ? fieldValue.includes(option)
+                            : fieldValue === option;
+
+                        formHtml += `<option value="${option}" ${selected ? 'selected' : ''}>${option}</option>`;
+                    }
+
+                    formHtml += '</select>';
+                }
+                else if (field.type === 'textarea') {
+                    formHtml += `<textarea name="${field.name}"
+                placeholder="${field.placeholder || ''}"
+                class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                rows="3">${fieldValue}</textarea>`;
+                }
+                else if (field.type === 'checkbox') {
+                    formHtml += `<div class="flex items-center">
+                <input type="checkbox" name="${field.name}" id="${field.name}"
+                    ${fieldValue ? 'checked' : ''}
+                    class="h-4 w-4 text-blue-600 rounded">
+                <label for="${field.name}" class="ml-2 text-sm text-gray-700">${field.label}</label>
+            </div>`;
+                }
+
+                formHtml += '</div>';
+            }
+
+            content.innerHTML = formHtml;
+
+            // Show modal
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            // Set selected node
+            state.selectedNode = nodeId;
+
+            // Handle save button
+            document.getElementById('node-editor-save').onclick = function () {
+                saveNodeConfig();
+            };
+
+            // Handle cancel and close buttons
+            document.getElementById('node-editor-cancel').onclick =
+                document.getElementById('close-node-editor').onclick = function () {
+                    modal.classList.add('hidden');
+                    modal.classList.remove('flex');
+                    state.selectedNode = null;
+                };
+        }
+
+        function saveNodeConfig() {
+            const nodeId = state.selectedNode;
+            if (!nodeId) return;
+
+            const node = state.nodes.find(n => n.id === nodeId);
+            if (!node) return;
+
+            const nodeConfig = nodeTypes[node.type];
+            const formData = {};
+
+            // Get form values
+            for (const field of nodeConfig.configFields) {
+                if (field.type === 'checkbox') {
+                    formData[field.name] = document.querySelector(`#node-editor-content [name="${field.name}"]`).checked;
+                }
+                else if (field.type === 'select' && field.multiple) {
+                    const select = document.querySelector(`#node-editor-content [name="${field.name}"]`);
+                    formData[field.name] = Array.from(select.selectedOptions).map(option => option.value);
+                }
+                else {
+                    formData[field.name] = document.querySelector(`#node-editor-content [name="${field.name}"]`).value;
+                }
+            }
+
+            // Save to node state
+            node.config = formData;
+
+            // Update node display
+            updateNodeDisplay(nodeId);
+
+            // Close modal
+            document.getElementById('node-editor-modal').classList.add('hidden');
+            document.getElementById('node-editor-modal').classList.remove('flex');
+            state.selectedNode = null;
+        }
+
+        function updateNodeDisplay(nodeId) {
+            const node = state.nodes.find(n => n.id === nodeId);
+            if (!node) return;
+
+            const nodeElement = document.getElementById(nodeId);
+            if (!nodeElement) return;
+
+            const contentElement = nodeElement.querySelector('.node-content');
+            const nodeConfig = nodeTypes[node.type];
+
+            // Build content based on configuration
+            let content = '';
+            for (const field of nodeConfig.configFields) {
+                const value = node.config[field.name];
+                if (value && value !== '') {
+                    content += `<div class="flex justify-between mb-1">
+                <span class="font-medium">${field.label}:</span>
+                <span class="ml-2 truncate max-w-[100px]">${Array.isArray(value) ? value.join(', ') :
+                            field.type === 'checkbox' ? (value ? 'Yes' : 'No') :
+                                value
+                        }</span>
+            </div>`;
+                }
+            }
+
+            contentElement.innerHTML = content || 'Configure this node...';
+        }
+
+        function selectNode(nodeId) {
+            // Deselect all nodes
+            document.querySelectorAll('.workflow-node').forEach(node => {
+                node.classList.remove('ring-2', 'ring-blue-500');
+            });
+
+            // Select this node
+            const nodeElement = document.getElementById(nodeId);
+            if (nodeElement) {
+                nodeElement.classList.add('ring-2', 'ring-blue-500');
+            }
+        }
+
+        function deleteNode(nodeId) {
+            // Confirm deletion
+            if (!confirm('Are you sure you want to delete this node?')) return;
+
+            // Remove from DOM
+            const nodeElement = document.getElementById(nodeId);
+            if (nodeElement) nodeElement.remove();
+
+            // Remove related connections
+            const connectionsToRemove = state.connections.filter(
+                c => c.from.nodeId === nodeId || c.to.nodeId === nodeId
+            );
+
+            connectionsToRemove.forEach(connection => {
+                if (connection.line) {
+                    connection.line.remove();
+                }
+            });
+
+            // Update state
+            state.connections = state.connections.filter(
+                c => c.from.nodeId !== nodeId && c.to.nodeId !== nodeId
+            );
+
+            state.nodes = state.nodes.filter(n => n.id !== nodeId);
+
+            // Show placeholder if no nodes left
+            if (state.nodes.length === 0) {
+                document.getElementById('canvas-placeholder').style.display = 'flex';
+            }
+        }
+
+        function createNode(type, x, y) {
+            const nodeId = `node-${state.currentNodeId++}`;
+            const nodeConfig = nodeTypes[type];
+
+            // Create node in DOM
+            const canvas = document.getElementById('workflow-canvas');
+            const nodeEl = document.createElement('div');
+            nodeEl.id = nodeId;
+            nodeEl.className = `workflow-node absolute bg-white rounded-lg shadow-md border-2 border-${nodeConfig.color}-500 w-60`;
+            nodeEl.style.left = `${x}px`;
+            nodeEl.style.top = `${y}px`;
+
+            // Add node content
+            nodeEl.innerHTML = `
+        <div class="p-3 bg-${nodeConfig.color}-50 border-b border-${nodeConfig.color}-200 flex justify-between items-center">
+            <div class="flex items-center">
+                <i class="fas ${nodeConfig.icon} text-${nodeConfig.color}-500 mr-2"></i>
+                <span class="font-medium">${nodeConfig.title}</span>
+            </div>
+            <div class="flex space-x-1">
+                <button class="edit-node-btn text-gray-500 hover:text-blue-500 p-1" title="Edit">
+                    <i class="fas fa-cog"></i>
+                </button>
+                <button class="delete-node-btn text-gray-500 hover:text-red-500 p-1" title="Delete">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </div>
+        </div>
+        <div class="p-3 text-sm node-content">Configure this node...</div>
+        <div class="connection-points">
+            ${nodeConfig.inputs.length > 0 ? `
+                <div class="inputs absolute left-0 top-0 bottom-0 w-3 flex flex-col justify-evenly">
+                    ${nodeConfig.inputs.map(input => `
+                        <div class="input-point h-3 w-3 bg-gray-300 hover:bg-blue-500 rounded-full -ml-1.5 cursor-pointer"
+                            data-port="${input}" title="Input: ${input}"></div>
+                    `).join('')}
+                </div>
+            ` : ''}
+            ${nodeConfig.outputs.length > 0 ? `
+                <div class="outputs absolute right-0 top-0 bottom-0 w-3 flex flex-col justify-evenly">
+                    ${nodeConfig.outputs.map(output => `
+                        <div class="output-point h-3 w-3 bg-gray-300 hover:bg-green-500 rounded-full -mr-1.5 cursor-pointer"
+                            data-port="${output}" title="Output: ${output}"></div>
+                    `).join('')}
+                </div>
+            ` : ''}
+        </div>
+    `;
+
+            canvas.appendChild(nodeEl);
+
+            // Add node to state
+            state.nodes.push({
+                id: nodeId,
+                type: type,
+                x: x,
+                y: y,
+                config: {}
+            });
+
+            // Hide placeholder when nodes exist
+            document.getElementById('canvas-placeholder').style.display = 'none';
+
+            // Add event listeners
+            nodeEl.querySelector('.edit-node-btn').addEventListener('click', () => openNodeEditor(nodeId));
+            nodeEl.querySelector('.delete-node-btn').addEventListener('click', () => deleteNode(nodeId));
+
+            // Make node clickable for selection
+            nodeEl.addEventListener('click', (e) => {
+                if (!e.target.closest('button')) {
+                    selectNode(nodeId);
+                }
+            });
+
+            // Initialize drag events for this node
+            interact(`#${nodeId}`).draggable({
+                inertia: true,
+                autoScroll: true,
+                onstart: function (event) {
+                    state.draggedNode = nodeId;
+                    event.target.classList.add('dragging');
+                },
+                onmove: function (event) {
+                    const target = event.target;
+                    const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
+                    const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
+
+                    target.style.transform = `translate(${x}px, ${y}px)`;
+                    target.setAttribute('data-x', x);
+                    target.setAttribute('data-y', y);
+
+                    // Update connections
+                    redrawConnections();
+                },
+                onend: function (event) {
+                    event.target.classList.remove('dragging');
+                    state.draggedNode = null;
+
+                    // Update node position in state
+                    const index = state.nodes.findIndex(n => n.id === nodeId);
+                    if (index !== -1) {
+                        state.nodes[index].x = parseInt(event.target.style.left) + parseFloat(event.target.getAttribute('data-x') || 0);
+                        state.nodes[index].y = parseInt(event.target.style.top) + parseFloat(event.target.getAttribute('data-y') || 0);
+
+                        // Reset the transform
+                        event.target.style.transform = 'translate(0px, 0px)';
+                        event.target.setAttribute('data-x', 0);
+                        event.target.setAttribute('data-y', 0);
+
+                        // Explicitly set the position
+                        event.target.style.left = `${state.nodes[index].x}px`;
+                        event.target.style.top = `${state.nodes[index].y}px`;
+                    }
+                }
+            });
+
+            return nodeId;
+        }
+
+        function initializeConnections() {
+            // Setup connection drawing (with a slight delay to ensure DOM is ready)
+            setTimeout(() => {
+                // Set up click listeners for input/output points
+                document.addEventListener('click', (e) => {
+                    // Handle output points (starting connections)
+                    if (e.target.classList.contains('output-point')) {
+                        const outputPoint = e.target;
+                        const nodeEl = outputPoint.closest('.workflow-node');
+                        const outputPort = outputPoint.getAttribute('data-port');
+
+                        // Start temporary connection
+                        state.tempConnection = {
+                            fromNodeId: nodeEl.id,
+                            fromPort: outputPort,
+                            fromEl: outputPoint
+                        };
+
+                        // Add connecting class to show we're making a connection
+                        document.body.classList.add('connecting');
+                    }
+                    // Handle input points (finishing connections)
+                    else if (e.target.classList.contains('input-point') && state.tempConnection) {
+                        const inputPoint = e.target;
+                        const nodeEl = inputPoint.closest('.workflow-node');
+                        const inputPort = inputPoint.getAttribute('data-port');
+
+                        // Don't connect to the same node
+                        if (nodeEl.id === state.tempConnection.fromNodeId) {
+                            state.tempConnection = null;
+                            document.body.classList.remove('connecting');
+                            return;
+                        }
+
+                        // Create connection
+                        const connection = {
+                            from: {
+                                nodeId: state.tempConnection.fromNodeId,
+                                port: state.tempConnection.fromPort,
+                                el: state.tempConnection.fromEl
+                            },
+                            to: {
+                                nodeId: nodeEl.id,
+                                port: inputPort,
+                                el: inputPoint
+                            }
+                        };
+
+                        // Create the leader line
+                        connection.line = new LeaderLine(
+                            state.tempConnection.fromEl,
+                            inputPoint,
+                            {
+                                color: '#3b82f6',
+                                size: 2,
+                                endPlug: 'arrow2',
+                                path: 'fluid',
+                                startSocket: 'right',
+                                endSocket: 'left'
+                            }
+                        );
+
+                        // Add to state
+                        state.connections.push(connection);
+
+                        // Clear the temporary connection
+                        state.tempConnection = null;
+                        document.body.classList.remove('connecting');
+                    }
+                    // Cancel connection if clicked elsewhere
+                    else if (state.tempConnection) {
+                        state.tempConnection = null;
+                        document.body.classList.remove('connecting');
+                    }
+                });
+            }, 100);
+        }
+
+        function redrawConnections() {
+            // Remove all existing leader lines
+            state.connections.forEach(conn => {
+                if (conn.line) {
+                    conn.line.remove();
+                }
+            });
+
+            // Redraw all connections
+            state.connections.forEach(conn => {
+                const fromEl = document.querySelector(`#${conn.from.nodeId} .output-point[data-port="${conn.from.port}"]`);
+                const toEl = document.querySelector(`#${conn.to.nodeId} .input-point[data-port="${conn.to.port}"]`);
+
+                if (fromEl && toEl) {
+                    conn.line = new LeaderLine(
+                        fromEl,
+                        toEl,
+                        {
+                            color: '#3b82f6',
+                            size: 2,
+                            endPlug: 'arrow2',
+                            path: 'fluid',
+                            startSocket: 'right',
+                            endSocket: 'left'
+                        }
+                    );
+                }
+            });
+        }
+
+        function initializeButtons() {
+            // Clear canvas
+
+            document.getElementById('load-workflow-btn').addEventListener('click', () => {
+                loadWorkflowsList();
+            });
+            document.getElementById('clear-canvas-btn').addEventListener('click', () => {
+                if (confirm('Are you sure you want to clear the entire workflow?')) {
+                    // Clear connections
+                    state.connections.forEach(conn => {
+                        if (conn.line) conn.line.remove();
+                    });
+
+                    // Clear nodes
+                    state.nodes.forEach(node => {
+                        const nodeEl = document.getElementById(node.id);
+                        if (nodeEl) nodeEl.remove();
+                    });
+
+                    // Reset state
+                    state.nodes = [];
+                    state.connections = [];
+                    state.currentNodeId = 0;
+
+                    // Show placeholder
+                    document.getElementById('canvas-placeholder').style.display = 'flex';
+                }
+            });
+
+            // Save workflow
+            document.getElementById('save-workflow-btn').addEventListener('click', () => {
+                saveWorkflow();
+            });
+
+            // Execute workflow
+            document.getElementById('execute-workflow-btn').addEventListener('click', () => {
+                executeWorkflow();
+            });
+
+            // Export workflow
+            document.getElementById('export-workflow-btn').addEventListener('click', () => {
+                const workflow = serializeWorkflow();
+                const jsonStr = JSON.stringify(workflow, null, 2);
+
+                // Create download link
+                const a = document.createElement('a');
+                const blob = new Blob([jsonStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                a.href = url;
+                a.download = `${workflow.name.replace(/\s+/g, '_')}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            });
+
+            // Import workflow
+            document.getElementById('import-workflow-btn').addEventListener('click', () => {
+                // Create a file input element
+                const fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.accept = '.json';
+
+                fileInput.addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const workflow = JSON.parse(e.target.result);
+                            importWorkflow(workflow);
+                        } catch (err) {
+                            alert('Error importing workflow: ' + err.message);
+                        }
+                    };
+                    reader.readAsText(file);
+                });
+
+                fileInput.click();
+            });
+
+            // Set workflow name from input
+            document.getElementById('workflow-name').addEventListener('change', (e) => {
+                state.currentWorkflow.name = e.target.value;
+            });
+
+            // New workflow
+            document.getElementById('new-workflow-btn').addEventListener('click', () => {
+                if (state.nodes.length > 0 && !confirm('Create a new workflow? Current workflow will be lost.')) {
+                    return;
+                }
+
+                // Clear canvas
+                document.getElementById('clear-canvas-btn').click();
+
+                // Reset workflow name
+                document.getElementById('workflow-name').value = 'Untitled Workflow';
+                state.currentWorkflow.name = 'Untitled Workflow';
+                state.currentWorkflow.id = null;
+            });
+        }
+
+        function serializeWorkflow() {
+            // Get workflow name
+            const workflowName = document.getElementById('workflow-name').value || 'Untitled Workflow';
+
+            // Create workflow object
+            const workflow = {
+                id: state.currentWorkflow.id,
+                name: workflowName,
+                nodes: state.nodes.map(node => ({
+                    id: node.id,
+                    type: node.type,
+                    x: node.x,
+                    y: node.y,
+                    config: node.config
+                })),
+                connections: state.connections.map(conn => ({
+                    fromNodeId: conn.from.nodeId,
+                    fromPort: conn.from.port,
+                    toNodeId: conn.to.nodeId,
+                    toPort: conn.to.port
+                }))
+            };
+
+            return workflow;
+        }
+
+        function saveWorkflow() {
+            const workflow = serializeWorkflow();
+
+            // Show saving indicator
+            const saveBtn = document.getElementById('save-workflow-btn');
+            const originalText = saveBtn.innerHTML;
+            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Saving...';
+            saveBtn.disabled = true;
+
+            // Send to server
+            fetch('/api/workflows/save', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(workflow)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Update workflow ID if this was a new workflow
+                        state.currentWorkflow.id = data.id;
+
+                        // Show success message
+                        saveBtn.innerHTML = '<i class="fas fa-check mr-1"></i> Saved!';
+                        setTimeout(() => {
+                            saveBtn.innerHTML = originalText;
+                            saveBtn.disabled = false;
+                        }, 1500);
+                    } else {
+                        alert('Error saving workflow: ' + data.message);
+                        saveBtn.innerHTML = originalText;
+                        saveBtn.disabled = false;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error saving workflow:', error);
+                    alert('Error saving workflow. See console for details.');
+                    saveBtn.innerHTML = originalText;
+                    saveBtn.disabled = false;
+                });
+        }
+
+        function executeWorkflow() {
+            const workflow = serializeWorkflow();
+
+            // Show execution panel
+            document.getElementById('execution-panel').classList.remove('hidden');
+
+            // Update UI
+            const executeBtn = document.getElementById('execute-workflow-btn');
+            const originalText = executeBtn.innerHTML;
+            executeBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Executing...';
+            executeBtn.disabled = true;
+
+            // Update workflow status
+            const statusEl = document.getElementById('workflow-status');
+            statusEl.textContent = 'Running';
+            statusEl.className = 'ml-2 px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium';
+
+            // Clear previous execution log
+            document.getElementById('execution-log').innerHTML = '';
+
+            // Send to server
+            fetch('/api/workflows/execute', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(workflow)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Setup for real-time updates
+                        listenForExecutionUpdates(data.executionId);
+                    } else {
+                        handleExecutionFailure('Failed to start execution: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error executing workflow:', error);
+                    handleExecutionFailure('Error starting execution. See console for details.');
+                });
+
+            // Handle stop execution
+            document.getElementById('stop-execution-btn').addEventListener('click', () => {
+                if (!state.currentExecutionId) return;
+
+                fetch(`/api/workflows/execution/${state.currentExecutionId}/stop`, {
+                    method: 'POST'
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            console.log('Workflow execution stopping...');
+                        } else {
+                            console.error('Failed to stop execution:', data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error stopping execution:', error);
+                    });
+            });
+        }
+
+        function listenForExecutionUpdates(executionId) {
+            state.currentExecutionId = executionId;
+
+            // Set up EventSource for real-time updates
+            const eventSource = new EventSource(`/api/workflows/execution/${executionId}/events`);
+
+            eventSource.addEventListener('step-update', (e) => {
+                const data = JSON.parse(e.data);
+                updateExecutionStep(data);
+            });
+
+            eventSource.addEventListener('execution-complete', (e) => {
+                const data = JSON.parse(e.data);
+                completeExecution(data);
+                eventSource.close();
+            });
+
+            eventSource.addEventListener('execution-failed', (e) => {
+                const data = JSON.parse(e.data);
+                handleExecutionFailure(data.message);
+                eventSource.close();
+            });
+
+            eventSource.onerror = () => {
+                console.error('EventSource error');
+                eventSource.close();
+            };
+        }
+
+        function updateExecutionStep(stepData) {
+            const executionLog = document.getElementById('execution-log');
+
+            // Check if step already exists
+            let stepRow = document.getElementById(`step-${stepData.nodeId}`);
+
+            if (!stepRow) {
+                // Create new step row
+                stepRow = document.createElement('tr');
+                stepRow.id = `step-${stepData.nodeId}`;
+
+                stepRow.innerHTML = `
+            <td class="px-4 py-2">${stepData.nodeId}</td>
+            <td class="px-4 py-2">${stepData.type}</td>
+            <td class="px-4 py-2 step-status">
+                <span class="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                    ${stepData.status}
+                </span>
+            </td>
+            <td class="px-4 py-2 step-duration">${stepData.duration || '-'}</td>
+            <td class="px-4 py-2 step-details">${stepData.details || '-'}</td>
+        `;
+
+                executionLog.appendChild(stepRow);
+            } else {
+                // Update existing row
+                const statusCell = stepRow.querySelector('.step-status');
+                const durationCell = stepRow.querySelector('.step-duration');
+                const detailsCell = stepRow.querySelector('.step-details');
+
+                let statusClass = 'bg-yellow-100 text-yellow-800';
+                if (stepData.status === 'completed') statusClass = 'bg-green-100 text-green-800';
+                if (stepData.status === 'failed') statusClass = 'bg-red-100 text-red-800';
+
+                statusCell.innerHTML = `
+            <span class="px-2 py-1 rounded-full text-xs font-medium ${statusClass}">
+                ${stepData.status}
+            </span>
+        `;
+
+                durationCell.textContent = stepData.duration || '-';
+                detailsCell.textContent = stepData.details || '-';
+            }
+        }
+
+        function completeExecution(data) {
+            // Update UI
+            const executeBtn = document.getElementById('execute-workflow-btn');
+            executeBtn.innerHTML = '<i class="fas fa-play mr-1"></i> Execute';
+            executeBtn.disabled = false;
+
+            // Update workflow status
+            const statusEl = document.getElementById('workflow-status');
+            statusEl.textContent = 'Completed';
+            statusEl.className = 'ml-2 px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium';
+
+            // Clear execution ID
+            state.currentExecutionId = null;
+        }
+
+        function handleExecutionFailure(message) {
+            // Update UI
+            const executeBtn = document.getElementById('execute-workflow-btn');
+            executeBtn.innerHTML = '<i class="fas fa-play mr-1"></i> Execute';
+            executeBtn.disabled = false;
+
+            // Update workflow status
+            const statusEl = document.getElementById('workflow-status');
+            statusEl.textContent = 'Failed';
+            statusEl.className = 'ml-2 px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium';
+
+            // Add error to execution log
+            const executionLog = document.getElementById('execution-log');
+            const errorRow = document.createElement('tr');
+            errorRow.innerHTML = `
+        <td class="px-4 py-2" colspan="5">
+            <div class="text-red-600">
+                <i class="fas fa-exclamation-circle mr-1"></i> ${message}
+            </div>
+        </td>
+    `;
+            executionLog.appendChild(errorRow);
+
+            // Clear execution ID
+            state.currentExecutionId = null;
+        }
+
+
+        function loadWorkflowsList() {
+            fetch('/api/workflows/list')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success' && data.workflows.length > 0) {
+                        showWorkflowListModal(data.workflows);
+                    } else {
+                        alert('No saved workflows found.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading workflows:', error);
+                    alert('Error loading workflows. See console for details.');
+                });
+        }
+
+        function showWorkflowListModal(workflows) {
+            // Create modal
+            const modal = document.createElement('div');
+            modal.id = 'workflow-list-modal';
+            modal.className = 'fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50';
+
+            // Create modal content
+            const content = document.createElement('div');
+            content.className = 'bg-white rounded-lg shadow-xl p-6 max-w-lg w-full';
+
+            content.innerHTML = `
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold">Load Workflow</h3>
+            <button id="close-workflow-list" class="text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="max-h-96 overflow-y-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead>
+                    <tr>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Modified</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    ${workflows.map(workflow => `
+                        <tr>
+                            <td class="px-4 py-2">${workflow.name}</td>
+                            <td class="px-4 py-2">${new Date(workflow.last_modified).toLocaleString()}</td>
+                            <td class="px-4 py-2">
+                                <button class="load-workflow-btn px-2 py-1 bg-blue-600 text-white rounded text-xs"
+                                    data-id="${workflow.id}">
+                                    Load
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
+    `;
+
+            modal.appendChild(content);
+            document.body.appendChild(modal);
+
+            // Add event listeners
+            document.getElementById('close-workflow-list').addEventListener('click', () => {
+                document.getElementById('workflow-list-modal').remove();
+            });
+
+            document.querySelectorAll('.load-workflow-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const workflowId = btn.getAttribute('data-id');
+                    loadWorkflow(workflowId);
+                    document.getElementById('workflow-list-modal').remove();
+                });
+            });
+        }
+
+        function loadWorkflow(workflowId) {
+            fetch(`/api/workflows/${workflowId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        importWorkflow(data.workflow);
+                    } else {
+                        alert('Error loading workflow: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading workflow:', error);
+                    alert('Error loading workflow. See console for details.');
+                });
+        }
+
+        function importWorkflow(workflow) {
+            // Clear the existing canvas first
+            document.getElementById('clear-canvas-btn').click();
+
+            // Set workflow name
+            document.getElementById('workflow-name').value = workflow.name;
+            state.currentWorkflow.name = workflow.name;
+            state.currentWorkflow.id = workflow.id;
+
+            // Create nodes
+            const nodeMap = {};
+            workflow.nodes.forEach(node => {
+                const nodeId = createNode(node.type, node.x, node.y);
+                nodeMap[node.id] = nodeId;
+
+                // Find the newly created node in state
+                const newNode = state.nodes.find(n => n.id === nodeId);
+                if (newNode) {
+                    newNode.config = node.config;
+                    updateNodeDisplay(nodeId);
+                }
+            });
+
+            // Create connections (after nodes are created)
+            workflow.connections.forEach(conn => {
+                const fromNodeId = nodeMap[conn.fromNodeId];
+                const toNodeId = nodeMap[conn.toNodeId];
+
+                if (fromNodeId && toNodeId) {
+                    const fromEl = document.querySelector(`#${fromNodeId} .output-point[data-port="${conn.fromPort}"]`);
+                    const toEl = document.querySelector(`#${toNodeId} .input-point[data-port="${conn.toPort}"]`);
+
+                    if (fromEl && toEl) {
+                        const connection = {
+                            from: {
+                                nodeId: fromNodeId,
+                                port: conn.fromPort,
+                                el: fromEl
+                            },
+                            to: {
+                                nodeId: toNodeId,
+                                port: conn.toPort,
+                                el: toEl
+                            }
+                        };
+
+                        connection.line = new LeaderLine(
+                            fromEl,
+                            toEl,
+                            {
+                                color: '#3b82f6',
+                                size: 2,
+                                endPlug: 'arrow2',
+                                path: 'fluid',
+                                startSocket: 'right',
+                                endSocket: 'left'
+                            }
+                        );
+
+                        state.connections.push(connection);
+                    }
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}
