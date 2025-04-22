@@ -44,7 +44,14 @@ Now that your code is on GitHub, you can deploy the demo:
 # Navigate to the frontend directory
 cd frontend
 
-# Run the deployment script
+# Run the direct deployment script (recommended for TypeScript 5.x)
+# For Windows Command Prompt:
+direct-deploy.bat
+
+# For PowerShell:
+.\direct-deploy.ps1
+
+# Alternatively, you can use the regular deployment scripts
 # For Windows Command Prompt:
 deploy-demo.bat
 
@@ -112,12 +119,22 @@ If you encounter authentication issues when deploying:
 If the deployment fails:
 
 1. Check the error messages in the console
-2. Make sure you have the `gh-pages` package installed:
+2. Try using the direct deployment scripts which bypass TypeScript version checks:
    ```bash
    cd frontend
-   npm install --save-dev gh-pages
+   .\direct-deploy.ps1  # or direct-deploy.bat
    ```
-3. Verify that the `homepage` field in `package.json` is correct:
+3. If you have TypeScript version conflicts, use the `--legacy-peer-deps` flag:
+   ```bash
+   npm install --legacy-peer-deps
+   npm run deploy
+   ```
+4. Make sure you have the `gh-pages` package installed:
+   ```bash
+   cd frontend
+   npm install --save-dev gh-pages --legacy-peer-deps
+   ```
+5. Verify that the `homepage` field in `package.json` is correct:
    ```json
    "homepage": "https://Sagura091.github.io/workflow-builder"
    ```

@@ -3,7 +3,8 @@ echo Deploying Workflow Builder Demo to GitHub Pages...
 echo.
 
 echo Step 1: Installing dependencies...
-call npm install
+echo Using --legacy-peer-deps to resolve TypeScript version conflicts
+call npm install --legacy-peer-deps
 if %ERRORLEVEL% NEQ 0 (
     echo Error installing dependencies. Please check your npm installation.
     pause

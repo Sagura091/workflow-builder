@@ -3,7 +3,8 @@ Write-Host ""
 
 try {
     Write-Host "Step 1: Installing dependencies..." -ForegroundColor Yellow
-    npm install
+    Write-Host "Using --legacy-peer-deps to resolve TypeScript version conflicts" -ForegroundColor Yellow
+    npm install --legacy-peer-deps
     if ($LASTEXITCODE -ne 0) {
         throw "Error installing dependencies. Please check your npm installation."
     }
