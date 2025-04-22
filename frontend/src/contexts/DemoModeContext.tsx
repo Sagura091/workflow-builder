@@ -16,10 +16,39 @@ interface DemoModeContextType {
   executionResults: any;
 }
 
-const DemoModeContext = createContext<DemoModeContextType | undefined>(undefined);
+// Create default values for the context
+const defaultDemoModeContext: DemoModeContextType = {
+  isDemoMode: true,
+  toggleDemoMode: () => {},
+  demoNodes: [],
+  demoConnections: [],
+  demoPlugins: mockPlugins,
+  updateDemoNodes: () => {},
+  updateDemoConnections: () => {},
+  resetDemo: () => {},
+  executeDemoWorkflow: async () => ({}),
+  isExecuting: false,
+  executionResults: null
+};
+
+// Check if we're in GitHub Pages or standalone mode
+const isStandalone =
+  typeof window !== 'undefined' &&
+  ((window as any).STANDALONE_DEMO === true ||
+   window.location.hostname.includes('github.io') ||
+   window.location.hostname.includes('netlify.app') ||
+   window.location.hostname.includes('vercel.app'));
+
+// Create the context with default values for standalone mode
+const DemoModeContext = createContext<DemoModeContextType>(
+  isStandalone ? defaultDemoModeContext : (undefined as any)
+);
 
 export const DemoModeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [isDemoMode, setIsDemoMode] = useState<boolean>(false);
+  // Force demo mode if we're in standalone mode
+  const [isDemoMode, setIsDemoMode] = useState<boolean>(
+    isStandalone || (window as any).FORCE_DEMO_MODE === true || false
+  );
   const [demoNodes, setDemoNodes] = useState<NodeData[]>([]);
   const [demoConnections, setDemoConnections] = useState<Connection[]>([]);
   const [demoPlugins] = useState<Plugin[]>(mockPlugins);
@@ -34,7 +63,9 @@ export const DemoModeProvider: React.FC<{ children: ReactNode }> = ({ children }
   }, [isDemoMode]);
 
   const toggleDemoMode = () => {
-    setIsDemoMode(prev => !prev);
+    if (!isStandalone) {
+      setIsDemoMode(prev => !prev);
+    }
   };
 
   const updateDemoNodes = (nodes: NodeData[]) => {
@@ -91,9 +122,19 @@ export const DemoModeProvider: React.FC<{ children: ReactNode }> = ({ children }
 
 export const useDemoMode = (): DemoModeContextType => {
   const context = useContext(DemoModeContext);
+
+  // In standalone mode, we should never get undefined
   if (context === undefined) {
+    console.warn('useDemoMode called outside of a DemoModeProvider');
+
+    // If we're in standalone mode, return default context
+    if (isStandalone) {
+      return defaultDemoModeContext;
+    }
+
     throw new Error('useDemoMode must be used within a DemoModeProvider');
   }
+
   return context;
 };
 

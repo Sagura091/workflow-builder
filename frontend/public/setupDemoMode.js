@@ -16,6 +16,21 @@ if (isDeployed) {
   window.STANDALONE_DEMO = true;
   window.ENSURE_DEMO_MODE_PROVIDER = true;
 
+  // Create a global DemoModeContext for components that try to use it
+  window.DemoModeContext = {
+    isDemoMode: true,
+    demoNodes: [],
+    demoConnections: [],
+    demoPlugins: [],
+    updateDemoNodes: function() {},
+    updateDemoConnections: function() {},
+    executeDemoWorkflow: async function() { return {}; },
+    isExecuting: false,
+    executionResults: null,
+    toggleDemoMode: function() {},
+    resetDemo: function() {}
+  };
+
   // Add a banner to indicate demo mode
   window.addEventListener('DOMContentLoaded', () => {
     const banner = document.createElement('div');
@@ -42,6 +57,17 @@ if (isDeployed) {
     const root = document.getElementById('root');
     if (root) {
       root.style.paddingTop = '40px';
+    }
+  });
+
+  // Add error handling for React errors
+  window.addEventListener('error', function(event) {
+    if (event.error && event.error.message && event.error.message.includes('DemoModeProvider')) {
+      console.warn('Caught DemoModeProvider error, reloading page...');
+      // Reload the page after a short delay
+      setTimeout(function() {
+        window.location.reload();
+      }, 1000);
     }
   });
 }
