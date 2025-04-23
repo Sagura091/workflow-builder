@@ -5,6 +5,7 @@ import { NodeDiscoveryProvider } from '../contexts/NodeDiscoveryContext';
 import { WebSocketProvider } from '../contexts/WebSocketContext';
 import { NodeConfigProvider } from '../contexts/NodeConfigContext';
 import { DemoModeProvider } from '../contexts/DemoModeContext';
+import DemoFeedbackButton from '../components/DemoMode/DemoFeedbackButton';
 
 const DemoApp: React.FC = () => {
   // Use keys to force the providers to re-render
@@ -106,17 +107,8 @@ const DemoApp: React.FC = () => {
                             >
                               <i className="fas fa-keyboard mr-1"></i> Keyboard Shortcuts
                             </button>
-                            <button
-                              className="px-3 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200 text-xs"
-                              onClick={() => {
-                                const feedback = prompt('We\'d love to hear your feedback about the Workflow Builder!\n\nWhat do you think? What features would you like to see?');
-                                if (feedback) {
-                                  alert('Thank you for your feedback! In a real implementation, this would be sent to our servers.');
-                                }
-                              }}
-                            >
-                              <i className="fas fa-comment mr-1"></i> Send Feedback
-                            </button>
+                            {/* Enhanced feedback button with modal */}
+                            <DemoFeedbackButton />
                           </div>
                         )}
                       </div>

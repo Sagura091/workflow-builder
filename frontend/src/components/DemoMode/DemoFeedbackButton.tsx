@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 
+// Formspree endpoint - configured to send feedback directly to your email
+const FORMSPREE_ENDPOINT = 'https://formspree.io/f/mgvkelgj';
+
 const DemoFeedbackButton: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [feedback, setFeedback] = useState('');
@@ -7,17 +10,66 @@ const DemoFeedbackButton: React.FC = () => {
   const [rating, setRating] = useState<number | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
-    // Simulate API call to submit feedback
-    setTimeout(() => {
-      console.log('Feedback submitted:', { rating, feedback, email });
+    setError(null);
+
+    try {
+      // Prepare the data to submit
+      const formData = {
+        rating: rating,
+        feedback: feedback,
+        email: email || 'Not provided',
+        source: 'GitHub Pages Demo',
+        timestamp: new Date().toISOString(),
+        userAgent: navigator.userAgent,
+        url: window.location.href,
+        browser: navigator.userAgent.match(/chrome|firefox|safari|edge|opera/i)?.[0] || 'Unknown',
+        device: /mobile|android|iphone|ipad|tablet/i.test(navigator.userAgent) ? 'Mobile' : 'Desktop',
+        screenSize: `${window.innerWidth}x${window.innerHeight}`,
+        referrer: document.referrer || 'Direct',
+        feedbackCategory: getFeedbackCategory(feedback)
+      };
+
+      // Helper function to categorize feedback based on content
+      function getFeedbackCategory(text) {
+        const lowerText = text.toLowerCase();
+        if (lowerText.includes('bug') || lowerText.includes('error') || lowerText.includes('issue') || lowerText.includes('doesn\'t work')) {
+          return 'Bug Report';
+        } else if (lowerText.includes('feature') || lowerText.includes('add') || lowerText.includes('would be nice') || lowerText.includes('should have')) {
+          return 'Feature Request';
+        } else if (lowerText.includes('confus') || lowerText.includes('hard to') || lowerText.includes('difficult') || lowerText.includes('unclear')) {
+          return 'Usability Issue';
+        } else if (lowerText.includes('like') || lowerText.includes('love') || lowerText.includes('great') || lowerText.includes('good')) {
+          return 'Positive Feedback';
+        } else {
+          return 'General Feedback';
+        }
+      }
+
+      // Submit to Formspree
+      const response = await fetch(FORMSPREE_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      });
+
+      if (!response.ok) {
+        throw new Error(`Submission failed: ${response.status} ${response.statusText}`);
+      }
+
+      // Log success (for debugging)
+      console.log('Feedback submitted successfully:', formData);
+
+      // Show success message
       setSubmitted(true);
-      setIsSubmitting(false);
-      
+
       // Reset form after 3 seconds
       setTimeout(() => {
         setIsOpen(false);
@@ -26,7 +78,12 @@ const DemoFeedbackButton: React.FC = () => {
         setRating(null);
         setSubmitted(false);
       }, 3000);
-    }, 1000);
+    } catch (err) {
+      console.error('Error submitting feedback:', err);
+      setError(err instanceof Error ? err.message : 'An unknown error occurred');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -67,6 +124,14 @@ const DemoFeedbackButton: React.FC = () => {
                 </div>
               ) : (
                 <form onSubmit={handleSubmit}>
+                  {error && (
+                    <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                      <p className="text-red-600 text-sm">
+                        <i className="fas fa-exclamation-circle mr-2"></i>
+                        {error}
+                      </p>
+                    </div>
+                  )}
                   <div className="mb-6">
                     <label className="block text-gray-700 font-medium mb-2">
                       How would you rate your experience?
