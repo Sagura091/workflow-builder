@@ -19,6 +19,7 @@ import { FEATURES } from '../../config';
 import { MockAuthProvider } from './MockAuthProvider';
 import { useDemoMode } from '../../contexts/DemoModeContext';
 import { DemoModeToggle, DemoWelcomeModal, DemoExecutionPanel, DemoFeedbackButton } from '../DemoMode';
+import { saveWorkflow, getSavedWorkflows, loadWorkflow, exportWorkflow, createWorkflowSelectionDialog } from './WorkflowOperations';
 
 // Initial state
 const initialState: WorkflowState = {
@@ -200,11 +201,143 @@ const WorkflowBuilder: React.FC = () => {
     });
   };
 
+  // Handle saving the current workflow
+  const handleSaveWorkflow = () => {
+    try {
+      // Save the workflow
+      const workflowId = saveWorkflow(state.currentWorkflow);
+
+      // Update the current workflow with the ID
+      setState(prevState => ({
+        ...prevState,
+        currentWorkflow: {
+          ...prevState.currentWorkflow,
+          id: workflowId
+        }
+      }));
+
+      // Show success message
+      alert(`Workflow "${state.currentWorkflow.name}" saved successfully!`);
+    } catch (error) {
+      console.error('Error saving workflow:', error);
+      alert(`Failed to save workflow: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  };
+
+  // Handle loading a workflow
+  const handleLoadWorkflow = async () => {
+    try {
+      // Get all saved workflows
+      const workflows = getSavedWorkflows();
+
+      if (workflows.length === 0) {
+        alert('No saved workflows found.');
+        return;
+      }
+
+      // Show workflow selection dialog
+      const selectedWorkflowId = await createWorkflowSelectionDialog(workflows);
+
+      if (selectedWorkflowId) {
+        // Load the selected workflow
+        const selectedWorkflow = loadWorkflow(selectedWorkflowId);
+
+        if (selectedWorkflow) {
+          // Confirm if there are unsaved changes
+          if (state.nodes.length > 0 && !confirm('Are you sure you want to load this workflow? Any unsaved changes will be lost.')) {
+            return;
+          }
+
+          // Update the state with the loaded workflow
+          setState({
+            ...initialState,
+            nodes: selectedWorkflow.nodes,
+            connections: selectedWorkflow.connections,
+            currentWorkflow: selectedWorkflow,
+            currentNodeId: Math.max(...selectedWorkflow.nodes.map(n => {
+              const idNum = parseInt(n.id.replace('node-', ''));
+              return isNaN(idNum) ? 0 : idNum;
+            }), 0) + 1,
+            history: {
+              past: [],
+              future: []
+            }
+          });
+
+          // Sync with demo mode if active
+          if (isDemoMode) {
+            updateDemoNodes(selectedWorkflow.nodes);
+            updateDemoConnections(selectedWorkflow.connections);
+          }
+
+          // Show success message
+          alert(`Workflow "${selectedWorkflow.name}" loaded successfully!`);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading workflow:', error);
+      alert(`Failed to load workflow: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  };
+
+  // Handle importing a workflow
+  const handleImportWorkflow = (importedWorkflow: Workflow) => {
+    try {
+      // Confirm if there are unsaved changes
+      if (state.nodes.length > 0 && !confirm('Are you sure you want to import this workflow? Any unsaved changes will be lost.')) {
+        return;
+      }
+
+      // Update the state with the imported workflow
+      setState({
+        ...initialState,
+        nodes: importedWorkflow.nodes,
+        connections: importedWorkflow.connections,
+        currentWorkflow: {
+          ...importedWorkflow,
+          id: null, // Ensure we're creating a new workflow
+          name: `${importedWorkflow.name} (Imported)`
+        },
+        currentNodeId: Math.max(...importedWorkflow.nodes.map(n => {
+          const idNum = parseInt(n.id.replace('node-', ''));
+          return isNaN(idNum) ? 0 : idNum;
+        }), 0) + 1,
+        history: {
+          past: [],
+          future: []
+        }
+      });
+
+      // Sync with demo mode if active
+      if (isDemoMode) {
+        updateDemoNodes(importedWorkflow.nodes);
+        updateDemoConnections(importedWorkflow.connections);
+      }
+
+      // Show success message
+      alert(`Workflow "${importedWorkflow.name}" imported successfully!`);
+    } catch (error) {
+      console.error('Error importing workflow:', error);
+      alert(`Failed to import workflow: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  };
+
+  // Handle exporting the current workflow
+  const handleExportWorkflow = () => {
+    try {
+      // Export the workflow
+      exportWorkflow(state.currentWorkflow);
+    } catch (error) {
+      console.error('Error exporting workflow:', error);
+      alert(`Failed to export workflow: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  };
+
   // Define keyboard shortcut actions
   const shortcutActions = {
     newWorkflow: handleNewWorkflow,
-    saveWorkflow: () => console.log('Save workflow'),
-    openWorkflow: () => console.log('Open workflow'),
+    saveWorkflow: handleSaveWorkflow,
+    openWorkflow: handleLoadWorkflow,
     undo,
     redo,
     showShortcuts: () => setShowShortcutsModal(true),
@@ -751,6 +884,10 @@ const WorkflowBuilder: React.FC = () => {
               workflowName={state.currentWorkflow.name}
               onNewWorkflow={handleNewWorkflow}
               onClearCanvas={clearCanvas}
+              onSaveWorkflow={handleSaveWorkflow}
+              onLoadWorkflow={handleLoadWorkflow}
+              onImportWorkflow={handleImportWorkflow}
+              onExportWorkflow={handleExportWorkflow}
               onLoadTemplate={handleLoadTemplate}
               onShowShortcuts={() => setShowShortcutsModal(true)}
             />
@@ -859,9 +996,17 @@ const WorkflowBuilder: React.FC = () => {
                     <div className="flex space-x-2">
                       <button
                         className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
-                        onClick={() => console.log('Save workflow')}
+                        onClick={handleSaveWorkflow}
+                        title="Save the current workflow (Ctrl+S)"
                       >
                         <i className="fas fa-save mr-1"></i> Save
+                      </button>
+                      <button
+                        className="px-3 py-1 bg-purple-600 text-white rounded hover:bg-purple-700 text-sm"
+                        onClick={handleLoadWorkflow}
+                        title="Load a saved workflow (Ctrl+O)"
+                      >
+                        <i className="fas fa-folder-open mr-1"></i> Load
                       </button>
                       <button
                         className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
@@ -872,18 +1017,21 @@ const WorkflowBuilder: React.FC = () => {
                             setShowExecutionPanel(true);
                           }
                         }}
+                        title="Execute the current workflow (F5)"
                       >
                         <i className="fas fa-play mr-1"></i> Execute
                       </button>
                       <button
-                        className="px-3 py-1 bg-purple-600 text-white rounded hover:bg-purple-700 text-sm"
-                        onClick={() => console.log('Export workflow')}
+                        className="px-3 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-sm"
+                        onClick={handleExportWorkflow}
+                        title="Export the current workflow to a file"
                       >
                         <i className="fas fa-file-export mr-1"></i> Export
                       </button>
                       <button
                         className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
                         onClick={clearCanvas}
+                        title="Clear the canvas (Delete all nodes)"
                       >
                         <i className="fas fa-trash-alt mr-1"></i> Clear
                       </button>
