@@ -52,10 +52,24 @@ const DemoModeContext = createContext<DemoModeContextType>(
 );
 
 export const DemoModeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  // Force demo mode if we're in standalone mode
-  const [isDemoMode, setIsDemoMode] = useState<boolean>(
-    isStandalone || (window as any).FORCE_DEMO_MODE === true || false
-  );
+  // Load demo mode state from localStorage or use default
+  const loadDemoModeState = (): boolean => {
+    // Always use demo mode in standalone mode
+    if (isStandalone || (window as any).FORCE_DEMO_MODE === true) {
+      return true;
+    }
+
+    // Check localStorage for saved preference
+    const savedState = localStorage.getItem('demo_mode_enabled');
+    if (savedState !== null) {
+      return savedState === 'true';
+    }
+
+    // Default to false in regular development mode
+    return false;
+  };
+
+  const [isDemoMode, setIsDemoMode] = useState<boolean>(loadDemoModeState());
 
   // Initialize with sample workflow data
   const sampleWorkflow = createSampleWorkflow();
@@ -80,9 +94,28 @@ export const DemoModeProvider: React.FC<{ children: ReactNode }> = ({ children }
     }
   }, [isDemoMode]);
 
-  const toggleDemoMode = () => {
+  // Save demo mode state to localStorage whenever it changes
+  useEffect(() => {
+    // Don't save in standalone mode since it's always true
     if (!isStandalone) {
-      setIsDemoMode(prev => !prev);
+      localStorage.setItem('demo_mode_enabled', String(isDemoMode));
+    }
+  }, [isDemoMode]);
+
+  const toggleDemoMode = () => {
+    // Allow toggling in development mode even if we're in standalone mode
+    if (!isStandalone || process.env.NODE_ENV === 'development') {
+      const newDemoMode = !isDemoMode;
+
+      // Update state
+      setIsDemoMode(newDemoMode);
+
+      // Save to localStorage
+      localStorage.setItem('demo_mode_enabled', String(newDemoMode));
+
+      console.log('Demo mode toggled to:', newDemoMode);
+    } else {
+      console.warn('Cannot toggle demo mode in standalone production mode');
     }
   };
 
@@ -140,22 +173,28 @@ export const DemoModeProvider: React.FC<{ children: ReactNode }> = ({ children }
     }
   };
 
+  // Create the context value object
+  const contextValue = {
+    isDemoMode,
+    toggleDemoMode,
+    demoNodes,
+    demoConnections,
+    demoPlugins,
+    updateDemoNodes,
+    updateDemoConnections,
+    resetDemo,
+    executeDemoWorkflow,
+    isExecuting,
+    executionResults
+  };
+
+  // Expose the context to the window object for development tools
+  if (process.env.NODE_ENV === 'development') {
+    (window as any).__DEMO_MODE_CONTEXT__ = contextValue;
+  }
+
   return (
-    <DemoModeContext.Provider
-      value={{
-        isDemoMode,
-        toggleDemoMode,
-        demoNodes,
-        demoConnections,
-        demoPlugins,
-        updateDemoNodes,
-        updateDemoConnections,
-        resetDemo,
-        executeDemoWorkflow,
-        isExecuting,
-        executionResults
-      }}
-    >
+    <DemoModeContext.Provider value={contextValue}>
       {children}
     </DemoModeContext.Provider>
   );
