@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Workflow Builder Demo</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+        'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+        sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    
+    .demo-banner {
+      background-color: #f0f9ff;
+      padding: 10px;
+      text-align: center;
+      border-bottom: 1px solid #bae6fd;
+    }
+    
+    .demo-banner p {
+      margin: 0;
+      font-size: 14px;
+    }
+    
+    .demo-banner a {
+      color: #0284c7;
+      text-decoration: underline;
+    }
+  </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<body>
+  <div class="demo-banner">
+    <p>
+      <strong>Workflow Builder Demo</strong> - This is a standalone demo that runs entirely in your browser. No installation required!
+      <a href="https://github.com/yourusername/workflow-builder" target="_blank">View on GitHub</a>
+    </p>
+  </div>
+  
+  <div id="root"></div>
+  
+  <script>
+    // Force demo mode
+    window.FORCE_DEMO_MODE = true;
+    
+    // Disable backend API calls
+    window.STANDALONE_DEMO = true;
+    
+    // Ensure DemoModeProvider is available
+    window.ENSURE_DEMO_MODE_PROVIDER = true;
+  </script>
+</body>
+</html>
