@@ -17,6 +17,9 @@ export interface ConfigField {
   multiple?: boolean;
   min?: number;
   step?: number;
+  language?: 'javascript' | 'python' | 'json' | 'html' | 'css';
+  height?: string;
+  helpText?: string;
 }
 
 export interface NodeData {
@@ -58,7 +61,13 @@ export interface PluginMeta {
 
 export interface Plugin {
   id: string;
-  __plugin_meta__: PluginMeta;
+  name?: string;
+  category?: string;
+  description?: string;
+  inputs?: any[];
+  outputs?: any[];
+  ui_properties?: Record<string, any>;
+  __plugin_meta__?: PluginMeta;
 }
 
 // Workflow Types

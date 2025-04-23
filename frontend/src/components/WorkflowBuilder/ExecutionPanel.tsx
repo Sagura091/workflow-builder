@@ -64,7 +64,7 @@ const ExecutionPanel: React.FC<ExecutionPanelProps> = ({
 
       // Execute workflow
       const result = await executeWorkflow(workflow);
-      const newExecutionId = result.execution_id || '';
+      const newExecutionId = result.executionId || '';
       setExecutionId(newExecutionId);
 
       // Notify parent of the execution ID

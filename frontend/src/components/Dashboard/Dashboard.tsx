@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { getWorkflows } from '../../services/api';
 import { getSchedules } from '../../services/scheduleService';
 import { getCacheStats } from '../../services/cacheService';
-import { Workflow } from '../../types';
+import { Workflow } from '../../types/types';
 import { Schedule, ScheduleStatus } from '../../types/schedule';
 import { FEATURES } from '../../config';
 import { formatDateTime } from '../../utils/dateUtils';
@@ -14,24 +14,24 @@ const Dashboard: React.FC = () => {
   const [cacheStats, setCacheStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Load dashboard data
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
       setError(null);
-      
+
       try {
         // Load workflows
         const workflowsData = await getWorkflows();
         setWorkflows(workflowsData);
-        
+
         // Load schedules if enabled
         if (FEATURES.ENABLE_SCHEDULING) {
           const schedulesData = await getSchedules();
           setSchedules(schedulesData);
         }
-        
+
         // Load cache stats if enabled
         if (FEATURES.ENABLE_CACHING) {
           try {
@@ -47,10 +47,10 @@ const Dashboard: React.FC = () => {
         setLoading(false);
       }
     };
-    
+
     loadData();
   }, []);
-  
+
   // Get status badge color
   const getStatusBadgeColor = (status: ScheduleStatus) => {
     switch (status) {
@@ -66,7 +66,7 @@ const Dashboard: React.FC = () => {
         return 'bg-gray-100 text-gray-800';
     }
   };
-  
+
   if (loading) {
     return (
       <div className="flex justify-center py-8">
@@ -77,7 +77,7 @@ const Dashboard: React.FC = () => {
       </div>
     );
   }
-  
+
   return (
     <div>
       <div className="mb-6">
@@ -86,7 +86,7 @@ const Dashboard: React.FC = () => {
           Overview of your workflows and schedules
         </p>
       </div>
-      
+
       {error && (
         <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-6">
           <div className="flex">
@@ -101,7 +101,7 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
       )}
-      
+
       {/* Stats */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 mb-6">
         {/* Workflow Stats */}
@@ -135,7 +135,7 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
         </div>
-        
+
         {/* Schedule Stats */}
         {FEATURES.ENABLE_SCHEDULING && (
           <div className="bg-white overflow-hidden shadow rounded-lg">
@@ -169,7 +169,7 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
         )}
-        
+
         {/* Cache Stats */}
         {FEATURES.ENABLE_CACHING && cacheStats && (
           <div className="bg-white overflow-hidden shadow rounded-lg">
@@ -204,7 +204,7 @@ const Dashboard: React.FC = () => {
           </div>
         )}
       </div>
-      
+
       {/* Recent Workflows */}
       <div className="bg-white shadow overflow-hidden sm:rounded-lg mb-6">
         <div className="px-4 py-5 sm:px-6 flex justify-between items-center">
@@ -223,7 +223,7 @@ const Dashboard: React.FC = () => {
             New Workflow
           </Link>
         </div>
-        
+
         {workflows.length === 0 ? (
           <div className="px-4 py-5 sm:p-6 text-center text-gray-500">
             No workflows found. Create your first workflow to get started.
@@ -284,7 +284,7 @@ const Dashboard: React.FC = () => {
           </div>
         )}
       </div>
-      
+
       {/* Recent Schedules */}
       {FEATURES.ENABLE_SCHEDULING && (
         <div className="bg-white shadow overflow-hidden sm:rounded-lg">
@@ -304,7 +304,7 @@ const Dashboard: React.FC = () => {
               New Schedule
             </Link>
           </div>
-          
+
           {schedules.length === 0 ? (
             <div className="px-4 py-5 sm:p-6 text-center text-gray-500">
               No schedules found. Create your first schedule to automate your workflows.

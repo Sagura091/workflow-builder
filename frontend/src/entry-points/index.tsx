@@ -1,9 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import './index.css';
-import App from './App';
-import DemoApp from './DemoApp';
-import reportWebVitals from './reportWebVitals';
+import '../styles/index.css';
+import App from '../pages/App';
+import DemoApp from '../pages/DemoApp';
+import reportWebVitals from '../utils/reportWebVitals';
 
 // Check if we're in demo mode
 const isDemoMode = process.env.REACT_APP_DEMO_MODE === 'true' ||

@@ -1,25 +1,25 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import WorkflowBuilderWrapper from './components/WorkflowBuilder/WorkflowBuilderWrapper';
-import { NodeTypesProvider } from './contexts/NodeTypesContext';
-import { NodeDiscoveryProvider } from './contexts/NodeDiscoveryContext';
-import { AuthProvider } from './contexts/AuthContext';
-import { WebSocketProvider } from './contexts/WebSocketContext';
-import { ThemeProvider } from './contexts/ThemeContext';
-import { NodeConfigProvider } from './contexts/NodeConfigContext';
-import { DemoModeProvider } from './contexts/DemoModeContext';
-import LoginForm from './components/Auth/LoginForm';
-import RegisterForm from './components/Auth/RegisterForm';
-import UserProfile from './components/Auth/UserProfile';
-import ProtectedRoute from './components/Auth/ProtectedRoute';
-import ScheduleList from './components/Schedules/ScheduleList';
-import ScheduleForm from './components/Schedules/ScheduleForm';
-import ScheduleDetails from './components/Schedules/ScheduleDetails';
-import ExecutionResults from './components/Workflow/ExecutionResults';
-import Layout from './components/Layout/Layout';
-import Dashboard from './components/Dashboard/Dashboard';
-import NotFound from './components/Layout/NotFound';
-import Unauthorized from './components/Layout/Unauthorized';
+import WorkflowBuilderWrapper from '../components/WorkflowBuilder/WorkflowBuilderWrapper';
+import { NodeTypesProvider } from '../contexts/NodeTypesContext';
+import { NodeDiscoveryProvider } from '../contexts/NodeDiscoveryContext';
+import { AuthProvider } from '../contexts/AuthContext';
+import { WebSocketProvider } from '../contexts/WebSocketContext';
+import { ThemeProvider } from '../contexts/ThemeContext';
+import { NodeConfigProvider } from '../contexts/NodeConfigContext';
+import { DemoModeProvider } from '../contexts/DemoModeContext';
+import LoginForm from '../components/Auth/LoginForm';
+import RegisterForm from '../components/Auth/RegisterForm';
+import UserProfile from '../components/Auth/UserProfile';
+import ProtectedRoute from '../components/Auth/ProtectedRoute';
+import ScheduleList from '../components/Schedules/ScheduleList';
+import ScheduleForm from '../components/Schedules/ScheduleForm';
+import ScheduleDetails from '../components/Schedules/ScheduleDetails';
+import ExecutionResults from '../components/Workflow/ExecutionResults';
+import Layout from '../components/Layout/Layout';
+import Dashboard from '../components/Dashboard/Dashboard';
+import NotFound from '../components/Layout/NotFound';
+import Unauthorized from '../components/Layout/Unauthorized';
 
 const App: React.FC = () => {
   // Use keys to force the providers to re-render

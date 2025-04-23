@@ -2,7 +2,7 @@ import axios from 'axios';
 import {
   ApiResponse,
   Plugin,
-  PluginResponse,
+  PluginsResponse,
   Workflow,
   WorkflowExecutionResponse
 } from '../types';
@@ -66,7 +66,7 @@ api.interceptors.response.use(
 );
 
 // Plugin API
-export const getPlugins = async (): Promise<Plugin[] | PluginResponse> => {
+export const getPlugins = async (): Promise<Plugin[] | PluginsResponse> => {
   // If in standalone demo mode, return mock plugins immediately
   if (isStandaloneDemo) {
     console.log('Standalone demo mode: Using mock plugins');

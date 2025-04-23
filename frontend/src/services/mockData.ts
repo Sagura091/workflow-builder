@@ -402,7 +402,7 @@ export const mockExecuteWorkflow = async (nodes: NodeData[], connections: Connec
         const template = node.config.template || '{{variables}}';
         const variables = executionState.variables;
         // Simple template processing
-        const processedText = template.replace(/{{([^}]+)}}/g, (match, key) => {
+        const processedText = template.replace(/{{([^}]+)}}/g, (match: string, key: string) => {
           return variables[key] || match;
         });
         output = { text: processedText };

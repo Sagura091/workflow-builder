@@ -2,6 +2,10 @@
 
 This is a React TypeScript implementation of the Workflow Builder, designed to connect with the backend API for dynamic node generation and workflow execution.
 
+## Demo
+
+A live demo of the Workflow Builder is available at [https://Sagura091.github.io/workflow-builder](https://Sagura091.github.io/workflow-builder). This demo runs entirely in your browser without requiring a backend server.
+
 ## Features
 
 - Drag and drop interface for building workflows
@@ -79,6 +83,16 @@ To add new node types, update the `nodeTypes` object in the appropriate componen
 ### Styling
 
 The application uses Tailwind CSS for styling. You can customize the appearance by modifying the CSS classes or updating the Tailwind configuration in `tailwind.config.js`.
+
+## GitHub Pages Deployment
+
+To deploy the standalone demo to GitHub Pages:
+
+```bash
+npm run deploy:github
+```
+
+This will build the application with demo mode enabled and deploy it to GitHub Pages. For more details, see [GitHub Pages Deployment Guide](docs/GITHUB_PAGES_DEPLOYMENT.md).
 
 ## License
 

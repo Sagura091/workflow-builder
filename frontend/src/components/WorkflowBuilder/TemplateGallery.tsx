@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { 
-  templates, 
-  WorkflowTemplate, 
-  TemplateCategory 
+import {
+  templates,
+  WorkflowTemplate,
+  TemplateCategory
 } from '../../templates';
 import { Workflow } from '../../types';
 import './TemplateGallery.css';
@@ -12,22 +12,22 @@ interface TemplateGalleryProps {
   onClose: () => void;
 }
 
-const TemplateGallery: React.FC<TemplateGalleryProps> = ({ 
-  onSelectTemplate, 
-  onClose 
+const TemplateGallery: React.FC<TemplateGalleryProps> = ({
+  onSelectTemplate,
+  onClose
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<TemplateCategory | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTemplate, setSelectedTemplate] = useState<WorkflowTemplate | null>(null);
 
   // Filter templates based on category and search query
-  const filteredTemplates = templates.filter(template => {
+  const filteredTemplates = templates.filter((template: WorkflowTemplate) => {
     const matchesCategory = selectedCategory === 'all' || template.category === selectedCategory;
-    const matchesSearch = 
+    const matchesSearch =
       template.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       template.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      template.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
-    
+      template.tags.some((tag: string) => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+
     return matchesCategory && matchesSearch;
   });
 
@@ -76,7 +76,7 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({
       <div className="template-gallery-container bg-white dark:bg-dark-800 shadow-xl rounded-lg">
         <div className="template-gallery-header flex justify-between items-center p-4 border-b border-gray-200 dark:border-dark-600">
           <h2 className="text-xl font-semibold text-gray-800 dark:text-white">Workflow Templates</h2>
-          <button 
+          <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
           >
@@ -85,7 +85,7 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({
             </svg>
           </button>
         </div>
-        
+
         <div className="template-gallery-content flex h-[calc(100%-8rem)]">
           {/* Sidebar */}
           <div className="template-gallery-sidebar w-64 border-r border-gray-200 dark:border-dark-600 p-4 overflow-y-auto">
@@ -98,7 +98,7 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({
                 className="w-full px-3 py-2 border border-gray-300 dark:border-dark-600 rounded-md bg-white dark:bg-dark-700 text-gray-900 dark:text-gray-100"
               />
             </div>
-            
+
             <div className="mb-4">
               <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
                 Categories
@@ -132,7 +132,7 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({
                 ))}
               </ul>
             </div>
-            
+
             <div>
               <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
                 Difficulty
@@ -150,7 +150,7 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({
               </div>
             </div>
           </div>
-          
+
           {/* Template list */}
           <div className="template-gallery-templates flex-1 p-4 overflow-y-auto">
             {filteredTemplates.length === 0 ? (
@@ -291,7 +291,7 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({
             )}
           </div>
         </div>
-        
+
         {/* Footer */}
         <div className="template-gallery-footer p-4 border-t border-gray-200 dark:border-dark-600 flex justify-between items-center">
           <div>

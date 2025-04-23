@@ -1,10 +1,10 @@
 import React, { useEffect } from 'react';
-import WorkflowBuilderWrapper from './components/WorkflowBuilder/WorkflowBuilderWrapper';
-import { NodeTypesProvider } from './contexts/NodeTypesContext';
-import { NodeDiscoveryProvider } from './contexts/NodeDiscoveryContext';
-import { WebSocketProvider } from './contexts/WebSocketContext';
-import { NodeConfigProvider } from './contexts/NodeConfigContext';
-import { DemoModeProvider } from './contexts/DemoModeContext';
+import WorkflowBuilderWrapper from '../components/WorkflowBuilder/WorkflowBuilderWrapper';
+import { NodeTypesProvider } from '../contexts/NodeTypesContext';
+import { NodeDiscoveryProvider } from '../contexts/NodeDiscoveryContext';
+import { WebSocketProvider } from '../contexts/WebSocketContext';
+import { NodeConfigProvider } from '../contexts/NodeConfigContext';
+import { DemoModeProvider } from '../contexts/DemoModeContext';
 
 const DemoApp: React.FC = () => {
   // Use keys to force the providers to re-render

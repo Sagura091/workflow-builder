@@ -702,12 +702,16 @@ const WorkflowBuilder: React.FC = () => {
       <WebSocketProvider>
         <DndProvider backend={HTML5Backend}>
           <div className="container mx-auto relative">
-            {/* Demo Mode Components */}
-            <DemoModeToggle />
-            <DemoWelcomeModal />
-            {isDemoMode && <DemoFeedbackButton />}
-            {isDemoMode && showDemoExecutionPanel && (
-              <DemoExecutionPanel onClose={() => setShowDemoExecutionPanel(false)} />
+            {/* Demo Mode Components - Only render when DemoModeProvider is available */}
+            {hasDemoProvider.current && (
+              <>
+                <DemoModeToggle />
+                <DemoWelcomeModal />
+                {isDemoMode && <DemoFeedbackButton />}
+                {isDemoMode && showDemoExecutionPanel && (
+                  <DemoExecutionPanel onClose={() => setShowDemoExecutionPanel(false)} />
+                )}
+              </>
             )}
             {/* Execution Visualization Layer */}
             {activeExecution.isActive && (

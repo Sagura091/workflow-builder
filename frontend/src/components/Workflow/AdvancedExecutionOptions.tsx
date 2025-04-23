@@ -107,8 +107,8 @@ const AdvancedExecutionOptions: React.FC<AdvancedExecutionOptionsProps> = ({
         : await executeWorkflowAdvanced(executionRequest);
 
       // Call onExecutionStart with the execution ID
-      if (response.execution_id) {
-        onExecutionStart(response.execution_id);
+      if (response.executionId) {
+        onExecutionStart(response.executionId);
       }
 
       // Close the modal
@@ -210,7 +210,7 @@ const AdvancedExecutionOptions: React.FC<AdvancedExecutionOptionsProps> = ({
                         onChange={() => handleNodeSelection(node.id)}
                       />
                       <label htmlFor={`node-${node.id}`} className="ml-3 block text-sm text-gray-700">
-                        {node.label || node.type}
+                        {node.config?.title || node.type}
                       </label>
                     </div>
                   ))}
@@ -254,7 +254,7 @@ const AdvancedExecutionOptions: React.FC<AdvancedExecutionOptionsProps> = ({
                   >
                     <option value="">Select a node</option>
                     {workflow.nodes.map(node => (
-                      <option key={node.id} value={node.id}>{node.label || node.type}</option>
+                      <option key={node.id} value={node.id}>{node.config?.title || node.type}</option>
                     ))}
                   </select>
                   {executionMode === ExecutionMode.RESUME && !resumeFromNode && (

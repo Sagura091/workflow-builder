@@ -500,6 +500,22 @@ The project is organized into the following directories:
 workflow-builder/
 ├── backend/            # Backend code (FastAPI)
 ├── frontend/           # Frontend code (React)
+│   ├── docs/           # Frontend documentation
+│   ├── public/         # Public assets
+│   ├── scripts/        # Scripts for building and deployment
+│   │   └── deployment/ # Deployment scripts
+│   └── src/            # Source code
+│       ├── components/ # React components
+│       ├── config/     # Configuration files
+│       ├── contexts/   # React contexts
+│       ├── data/       # Data files
+│       ├── entry-points/ # Application entry points
+│       ├── hooks/      # Custom React hooks
+│       ├── pages/      # Page components
+│       ├── services/   # Service modules
+│       ├── styles/     # CSS and style files
+│       ├── types/      # TypeScript type definitions
+│       └── utils/      # Utility functions
 ├── docs/               # Documentation and examples
 │   ├── examples/       # Example files and templates
 │   └── json/           # JSON files for documentation and testing

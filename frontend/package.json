@@ -32,7 +32,9 @@
     "eject": "react-scripts eject",
     "create-standalone": "node scripts/create-standalone-enhanced.js",
     "predeploy": "npm run build --legacy-peer-deps",
-    "deploy": "gh-pages -d build"
+    "deploy": "gh-pages -d build",
+    "build:github": "node scripts/build-for-github-pages.js",
+    "deploy:github": "node scripts/build-for-github-pages.js && npx gh-pages -d build && node scripts/restore-original-index.js"
   },
   "homepage": "https://Sagura091.github.io/workflow-builder",
   "eslintConfig": {

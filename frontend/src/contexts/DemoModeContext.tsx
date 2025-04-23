@@ -37,7 +37,14 @@ const isStandalone =
   ((window as any).STANDALONE_DEMO === true ||
    window.location.hostname.includes('github.io') ||
    window.location.hostname.includes('netlify.app') ||
-   window.location.hostname.includes('vercel.app'));
+   window.location.hostname.includes('vercel.app') ||
+   window.location.hostname === 'localhost' ||
+   window.location.search.includes('demo=true'));
+
+// Log demo mode status
+if (isStandalone) {
+  console.log('Running in standalone demo mode');
+}
 
 // Create the context with default values for standalone mode
 const DemoModeContext = createContext<DemoModeContextType>(
@@ -123,7 +130,8 @@ export const DemoModeProvider: React.FC<{ children: ReactNode }> = ({ children }
 
       // Show an error message
       if (isStandalone) {
-        alert(`Error executing workflow: ${error.message}. This is a simulated error in the demo mode.`);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        alert(`Error executing workflow: ${errorMessage}. This is a simulated error in the demo mode.`);
       }
 
       throw error;
@@ -160,11 +168,13 @@ export const useDemoMode = (): DemoModeContextType => {
   if (context === undefined) {
     console.warn('useDemoMode called outside of a DemoModeProvider');
 
-    // If we're in standalone mode, return default context
-    if (isStandalone) {
+    // Check if we're in standalone mode or if the global flag is set
+    if (isStandalone || (window as any).FORCE_DEMO_MODE === true || (window as any).ENSURE_DEMO_MODE_PROVIDER === true) {
+      console.log('Using fallback demo context');
       return defaultDemoModeContext;
     }
 
+    // Only throw if we're not in any kind of demo mode
     throw new Error('useDemoMode must be used within a DemoModeProvider');
   }
 
