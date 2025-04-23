@@ -1,15 +1,13 @@
 {
   "files": {
     "main.css": "/workflow-builder/static/css/main.1990f6a3.css",
-    "main.js": "/workflow-builder/static/js/main.9f79789d.js",
-    "static/js/453.3c5db6d2.chunk.js": "/workflow-builder/static/js/453.3c5db6d2.chunk.js",
+    "main.js": "/workflow-builder/static/js/main.e7e1bdc8.js",
     "index.html": "/workflow-builder/index.html",
     "main.1990f6a3.css.map": "/workflow-builder/static/css/main.1990f6a3.css.map",
-    "main.9f79789d.js.map": "/workflow-builder/static/js/main.9f79789d.js.map",
-    "453.3c5db6d2.chunk.js.map": "/workflow-builder/static/js/453.3c5db6d2.chunk.js.map"
+    "main.e7e1bdc8.js.map": "/workflow-builder/static/js/main.e7e1bdc8.js.map"
   },
   "entrypoints": [
     "static/css/main.1990f6a3.css",
-    "static/js/main.9f79789d.js"
+    "static/js/main.e7e1bdc8.js"
   ]
 }

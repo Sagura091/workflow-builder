@@ -31,8 +31,9 @@ if (isDeployed) {
     resetDemo: function() {}
   };
 
-  // Add a banner to indicate demo mode
+  // Add a banner and welcome message to indicate demo mode
   window.addEventListener('DOMContentLoaded', () => {
+    // Create the banner
     const banner = document.createElement('div');
     banner.style.backgroundColor = '#f0f9ff';
     banner.style.padding = '10px';
@@ -46,8 +47,9 @@ if (isDeployed) {
 
     banner.innerHTML = `
       <p style="margin: 0; font-size: 14px;">
-        <strong>Workflow Builder Demo</strong> - This is a demo that runs entirely in your browser. No installation required!
+        <strong>Workflow Builder Demo</strong> - This is a fully interactive demo that runs entirely in your browser. No installation required!
         <a href="https://github.com/Sagura091/workflow-builder" target="_blank" style="color: #0284c7; text-decoration: underline; margin-left: 10px;">View on GitHub</a>
+        <button id="demo-help-btn" style="margin-left: 10px; background-color: #0284c7; color: white; border: none; border-radius: 4px; padding: 2px 8px; cursor: pointer;">How to Use</button>
       </p>
     `;
 
@@ -58,7 +60,43 @@ if (isDeployed) {
     if (root) {
       root.style.paddingTop = '40px';
     }
+
+    // Add event listener for the help button
+    setTimeout(() => {
+      const helpBtn = document.getElementById('demo-help-btn');
+      if (helpBtn) {
+        helpBtn.addEventListener('click', showHelpModal);
+      }
+
+      // Show welcome message after a short delay
+      setTimeout(showWelcomeMessage, 1000);
+    }, 500);
   });
+
+  // Function to show the welcome message
+  function showWelcomeMessage() {
+    alert('Welcome to the Workflow Builder Demo!\n\n' +
+          'This is a fully interactive demo that runs entirely in your browser.\n\n' +
+          'You can:\n' +
+          '- Drag nodes from the left panel to the canvas\n' +
+          '- Connect nodes by dragging from output to input ports\n' +
+          '- Configure nodes by clicking on them\n' +
+          '- Execute the workflow to see it in action\n\n' +
+          'Click the "How to Use" button in the top banner for more details.');
+  }
+
+  // Function to show the help modal
+  function showHelpModal() {
+    alert('How to Use the Workflow Builder Demo:\n\n' +
+          '1. Drag and Drop: Drag nodes from the left panel to the canvas\n' +
+          '2. Connect Nodes: Click and drag from an output port (right side of node) to an input port (left side of node)\n' +
+          '3. Configure Nodes: Click on a node to select it and edit its properties in the right panel\n' +
+          '4. Execute Workflow: Click the Execute button to run the workflow\n' +
+          '5. Zoom: Use the mouse wheel to zoom in/out\n' +
+          '6. Pan: Hold the middle mouse button or Alt+left-click and drag to pan the canvas\n' +
+          '7. Center View: Press "C" to center the view\n\n' +
+          'Note: This is a demo version that simulates workflow execution in the browser. In a real implementation, this would connect to a backend service.');
+  }
 
   // Add error handling for React errors
   window.addEventListener('error', function(event) {
