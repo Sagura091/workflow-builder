@@ -32,9 +32,9 @@ const defaultDemoModeContext: DemoModeContextType = {
 };
 
 // Check if we're in GitHub Pages or standalone mode
-const isStandalone =
-  typeof window !== 'undefined' &&
-  ((window as any).STANDALONE_DEMO === true ||
+const isStandalone = 
+  typeof window !== 'undefined' && 
+  ((window as any).STANDALONE_DEMO === true || 
    window.location.hostname.includes('github.io') ||
    window.location.hostname.includes('netlify.app') ||
    window.location.hostname.includes('vercel.app'));
@@ -49,22 +49,11 @@ export const DemoModeProvider: React.FC<{ children: ReactNode }> = ({ children }
   const [isDemoMode, setIsDemoMode] = useState<boolean>(
     isStandalone || (window as any).FORCE_DEMO_MODE === true || false
   );
-
-  // Initialize with sample workflow data
-  const sampleWorkflow = createSampleWorkflow();
-  const [demoNodes, setDemoNodes] = useState<NodeData[]>(sampleWorkflow.nodes);
-  const [demoConnections, setDemoConnections] = useState<Connection[]>(sampleWorkflow.connections);
+  const [demoNodes, setDemoNodes] = useState<NodeData[]>([]);
+  const [demoConnections, setDemoConnections] = useState<Connection[]>([]);
   const [demoPlugins] = useState<Plugin[]>(mockPlugins);
   const [isExecuting, setIsExecuting] = useState<boolean>(false);
   const [executionResults, setExecutionResults] = useState<any>(null);
-
-  // Log that demo mode is active
-  useEffect(() => {
-    if (isDemoMode) {
-      console.log('Demo mode is active');
-      console.log('Sample workflow loaded with', demoNodes.length, 'nodes and', demoConnections.length, 'connections');
-    }
-  }, [isDemoMode, demoNodes.length, demoConnections.length]);
 
   // Initialize demo data when demo mode is enabled
   useEffect(() => {
@@ -99,33 +88,11 @@ export const DemoModeProvider: React.FC<{ children: ReactNode }> = ({ children }
     setExecutionResults(null);
 
     try {
-      // Show a loading message
-      console.log('Executing demo workflow...');
-
-      // Execute the workflow with the current nodes and connections
       const results = await mockExecuteWorkflow(demoNodes, demoConnections);
-
-      // Log the results
-      console.log('Workflow execution completed:', results);
-
-      // Update the state with the results
       setExecutionResults(results);
-
-      // Show a success message
-      if (isStandalone) {
-        // In standalone mode, show a more detailed message
-        alert('Workflow executed successfully! This is a simulated execution in the demo mode. In a real implementation, this would connect to a backend service to execute the workflow.');
-      }
-
       return results;
     } catch (error) {
       console.error('Error executing demo workflow:', error);
-
-      // Show an error message
-      if (isStandalone) {
-        alert(`Error executing workflow: ${error.message}. This is a simulated error in the demo mode.`);
-      }
-
       throw error;
     } finally {
       setIsExecuting(false);
@@ -155,21 +122,18 @@ export const DemoModeProvider: React.FC<{ children: ReactNode }> = ({ children }
 
 export const useDemoMode = (): DemoModeContextType => {
   const context = useContext(DemoModeContext);
-
+  
   // In standalone mode, we should never get undefined
   if (context === undefined) {
     console.warn('useDemoMode called outside of a DemoModeProvider');
-
+    
     // If we're in standalone mode, return default context
     if (isStandalone) {
       return defaultDemoModeContext;
     }
-
+    
     throw new Error('useDemoMode must be used within a DemoModeProvider');
   }
-
+  
   return context;
 };
-
-// Export mock data for direct use
-export { mockNodeTypes };

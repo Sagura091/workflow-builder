@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <link rel="icon" href="/workflow-builder/favicon.ico"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="theme-color" content="#000000"/>
+    <meta name="description" content="Workflow Builder - A visual workflow builder for creating and executing workflows"/>
+    <link rel="apple-touch-icon" href="/workflow-builder/logo192.png"/>
+    <link rel="manifest" href="/workflow-builder/manifest.json"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.3.0/css/all.min.css"/>
+    <title>Workflow Builder Demo</title>
+    
+    <!-- Setup demo mode -->
+    <script src="/workflow-builder/setupDemoMode.js"></script>
+    
+    <!-- Error handling -->
+    <script>
+        // Add error handling
+        window.onerror = function(message, source, lineno, colno, error) {
+            if (message.includes('DemoModeProvider')) {
+                console.warn('Caught DemoModeProvider error, redirecting to fallback page...');
+                window.location.href = 'fallback.html';
+                return true;
+            }
+            return false;
+        };
+        
+        // Set a timeout to check if the app loaded correctly
+        setTimeout(function() {
+            var appRoot = document.getElementById('root');
+            if (appRoot && (!appRoot.children || appRoot.children.length === 0)) {
+                console.warn('App did not load within timeout, redirecting to fallback page...');
+                window.location.href = 'fallback.html';
+            }
+        }, 10000);
+    </script>
+    
+    <!-- Single Page Apps for GitHub Pages -->
+    <script type="text/javascript">
+        !function(n){if("/"===n.search[1]){var a=n.search.slice(1).split("&").map((function(n){return n.replace(/~and~/g,"&")})).join("?");window.history.replaceState(null,null,n.pathname.slice(0,-1)+a+n.hash)}}(window.location)
+    </script>
+    
+    <!-- App scripts and styles -->
+    <script defer="defer" src="/workflow-builder/static/js/main.f7cdf863.js"></script>
+    <link href="/workflow-builder/static/css/main.1990f6a3.css" rel="stylesheet">
+</head>
+<body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+</body>
+</html>

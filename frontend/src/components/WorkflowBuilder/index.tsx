@@ -73,17 +73,24 @@ const WorkflowBuilder: React.FC = () => {
     resetDemo: () => {}
   };
 
-  // Always call the hook, but catch errors
-  let demoContext;
-  try {
-    demoContext = useDemoMode();
-    hasDemoProvider.current = true;
-  } catch (error) {
-    // If the hook fails, we're not in a DemoModeProvider
-    hasDemoProvider.current = false;
-    demoContext = dummyDemoContext;
-    console.warn('DemoModeProvider not available, using fallback values');
-  }
+  // Always call hooks unconditionally at the top level
+  // Use a custom hook that doesn't throw
+  const useSafeDemoMode = () => {
+    try {
+      // Try to use the real hook
+      return useDemoMode();
+    } catch (error) {
+      // If it fails, return our dummy context
+      console.warn('DemoModeProvider not available, using fallback values');
+      return dummyDemoContext;
+    }
+  };
+
+  // Call our safe hook
+  const demoContext = useSafeDemoMode();
+
+  // Update the ref based on whether we got real context
+  hasDemoProvider.current = demoContext !== dummyDemoContext;
 
   // Use the context values, which will be either real or dummy
   const {

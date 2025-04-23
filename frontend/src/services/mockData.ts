@@ -347,32 +347,151 @@ export const mockPlugins: Plugin[] = mockNodeTypes.map(nodeType => ({
   }
 }));
 
-// Mock execution function
+// Mock execution function with more realistic simulation
 export const mockExecuteWorkflow = async (nodes: NodeData[], connections: Connection[]) => {
   // Simulate execution delay
   await new Promise(resolve => setTimeout(resolve, 1500));
+
+  // Create a map of nodes by ID for easier access
+  const nodesById = nodes.reduce((acc, node) => {
+    acc[node.id] = node;
+    return acc;
+  }, {} as Record<string, NodeData>);
+
+  // Create a map of connections by source node and port
+  const connectionsBySource = connections.reduce((acc, conn) => {
+    const key = `${conn.from.nodeId}:${conn.from.port}`;
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(conn);
+    return acc;
+  }, {} as Record<string, Connection[]>);
+
+  // Initialize execution state
+  const executionState = {
+    variables: {} as Record<string, any>,
+    nodeOutputs: {} as Record<string, any>,
+    logs: [] as any[]
+  };
+
+  // Process each node based on its type
+  const processNode = (nodeId: string) => {
+    const node = nodesById[nodeId];
+    if (!node) return null;
+
+    const timestamp = new Date().toISOString();
+    let output: any = {};
+
+    // Add log entry
+    executionState.logs.push({
+      node: nodeId,
+      message: `Executing node: ${node.type}`,
+      timestamp
+    });
+
+    // Process based on node type
+    switch (node.type) {
+      case 'core.begin':
+        output = { output: true };
+        break;
+
+      case 'core.text.text_input':
+        output = { text: node.config.text || 'Default text' };
+        break;
+
+      case 'core.text.text_template':
+        const template = node.config.template || '{{variables}}';
+        const variables = executionState.variables;
+        // Simple template processing
+        const processedText = template.replace(/{{([^}]+)}}/g, (match, key) => {
+          return variables[key] || match;
+        });
+        output = { text: processedText };
+        break;
+
+      case 'core.variables.set_variable':
+        const varName = node.config.name || 'unnamed';
+        // Find input connections to this node
+        const inputConn = connections.find(conn =>
+          conn.to.nodeId === nodeId && conn.to.port === 'value'
+        );
+        let value = 'No input';
+        if (inputConn) {
+          const sourceNodeId = inputConn.from.nodeId;
+          const sourcePort = inputConn.from.port;
+          const sourceOutput = executionState.nodeOutputs[sourceNodeId];
+          if (sourceOutput) {
+            value = sourceOutput[sourcePort];
+          }
+        }
+        executionState.variables[varName] = value;
+        output = { output: value };
+        break;
+
+      case 'core.variables.get_variable':
+        const variableName = node.config.name || 'unnamed';
+        output = { value: executionState.variables[variableName] || 'Variable not found' };
+        break;
+
+      case 'plugins.ai.text_generation':
+        // Find the prompt input
+        const promptConn = connections.find(conn =>
+          conn.to.nodeId === nodeId && conn.to.port === 'prompt'
+        );
+        let prompt = 'Default prompt';
+        if (promptConn) {
+          const sourceNodeId = promptConn.from.nodeId;
+          const sourcePort = promptConn.from.port;
+          const sourceOutput = executionState.nodeOutputs[sourceNodeId];
+          if (sourceOutput) {
+            prompt = sourceOutput[sourcePort];
+          }
+        }
+
+        // Generate a response based on the prompt
+        let response = 'This is a simulated AI response.';
+        if (prompt.toLowerCase().includes('workflow')) {
+          response = 'Workflow automation is the process of using technology to automate repetitive tasks, processes, and workflows within an organization. It helps reduce manual effort, minimize errors, and increase efficiency. Modern workflow automation tools allow users to visually design workflows using a node-based interface, connecting different actions and logic together to create powerful automated processes without requiring extensive programming knowledge.';
+        } else if (prompt.toLowerCase().includes('ai')) {
+          response = 'Artificial Intelligence (AI) refers to systems or machines that mimic human intelligence to perform tasks and can iteratively improve themselves based on the information they collect. AI manifests in a number of forms including chatbots, recommendation engines, facial recognition systems, and autonomous vehicles.';
+        } else {
+          response = `Here is some information about "${prompt}": This is a simulated response from an AI model in the standalone demo. In a real implementation, this would connect to an actual AI service to generate a response based on your prompt.`;
+        }
+
+        output = { text: response };
+        break;
+
+      default:
+        // For other node types, generate a simulated output
+        output = { output: `Simulated output for ${node.type}` };
+    }
+
+    // Store the output
+    executionState.nodeOutputs[nodeId] = output;
+    return output;
+  };
+
+  // Find the begin node and start execution
+  const beginNode = nodes.find(node => node.type === 'core.begin');
+  if (beginNode) {
+    processNode(beginNode.id);
+
+    // Process all other nodes
+    // This is a simplified execution that doesn't respect the actual flow
+    // In a real implementation, we would follow the connections
+    nodes.forEach(node => {
+      if (node.id !== beginNode.id) {
+        processNode(node.id);
+      }
+    });
+  }
 
   // Return mock execution results
   return {
     status: 'success',
     executionId: uuidv4(),
     results: {
-      node_outputs: {
-        'node-2': { text: 'Tell me about workflow automation' },
-        'node-3': {
-          text: 'Workflow automation is the process of using technology to automate repetitive tasks, processes, and workflows within an organization. It helps reduce manual effort, minimize errors, and increase efficiency. Modern workflow automation tools allow users to visually design workflows using a node-based interface, connecting different actions and logic together to create powerful automated processes without requiring extensive programming knowledge.'
-        },
-        'node-4': { output: 'Variable stored successfully' },
-        'node-6': { text: 'AI says: Workflow automation is the process of using technology to automate repetitive tasks...' }
-      },
-      log: [
-        { node: 'node-1', message: 'Workflow started', timestamp: new Date().toISOString() },
-        { node: 'node-2', message: 'Text input processed', timestamp: new Date().toISOString() },
-        { node: 'node-3', message: 'AI text generated', timestamp: new Date().toISOString() },
-        { node: 'node-4', message: 'Variable stored', timestamp: new Date().toISOString() },
-        { node: 'node-5', message: 'Condition evaluated', timestamp: new Date().toISOString() },
-        { node: 'node-6', message: 'Text formatted', timestamp: new Date().toISOString() }
-      ]
+      node_outputs: executionState.nodeOutputs,
+      log: executionState.logs
     }
   };
 };

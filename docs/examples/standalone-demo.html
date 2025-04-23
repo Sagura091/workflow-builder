@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Workflow Builder Demo</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.3.0/css/all.min.css">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      line-height: 1.6;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+    .banner {
+      background-color: #f0f9ff;
+      padding: 15px;
+      text-align: center;
+      border-bottom: 1px solid #bae6fd;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 0;
+      border-bottom: 1px solid #e5e7eb;
+      margin-bottom: 20px;
+    }
+    .canvas {
+      background-color: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 5px;
+      height: 600px;
+      position: relative;
+      overflow: hidden;
+    }
+    .sidebar {
+      width: 250px;
+      background-color: #fff;
+      border-right: 1px solid #e5e7eb;
+      height: 100%;
+      overflow-y: auto;
+      position: absolute;
+      left: 0;
+      top: 0;
+    }
+    .node {
+      background-color: #fff;
+      border: 1px solid #d1d5db;
+      border-radius: 5px;
+      padding: 10px;
+      margin: 10px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .node:hover {
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transform: translateY(-2px);
+    }
+    .node-category {
+      padding: 10px;
+      font-weight: 600;
+      color: #4b5563;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .canvas-area {
+      margin-left: 250px;
+      height: 100%;
+      position: relative;
+    }
+    .canvas-node {
+      position: absolute;
+      background-color: #fff;
+      border: 1px solid #d1d5db;
+      border-radius: 5px;
+      padding: 10px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      min-width: 150px;
+    }
+    .canvas-node-header {
+      font-weight: 600;
+      margin-bottom: 5px;
+      padding-bottom: 5px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .port {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background-color: #6b7280;
+      display: inline-block;
+      margin: 0 5px;
+    }
+    .port.input {
+      background-color: #3b82f6;
+    }
+    .port.output {
+      background-color: #10b981;
+    }
+    .connection {
+      position: absolute;
+      height: 2px;
+      background-color: #6b7280;
+      transform-origin: left center;
+    }
+    .footer {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #e5e7eb;
+      text-align: center;
+      color: #6b7280;
+    }
+    .button {
+      display: inline-block;
+      background-color: #3b82f6;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 5px;
+      text-decoration: none;
+      margin-right: 10px;
+      cursor: pointer;
+    }
+    .button:hover {
+      background-color: #2563eb;
+    }
+    .button.secondary {
+      background-color: #6b7280;
+    }
+    .button.secondary:hover {
+      background-color: #4b5563;
+    }
+  </style>
+</head>
+<body>
+  <div class="banner">
+    <p class="text-sm">
+      <strong>Workflow Builder Demo</strong> - This is a static demo that shows the UI of the Workflow Builder.
+      <a href="https://github.com/Sagura091/workflow-builder" target="_blank" class="text-blue-600 underline ml-2">View on GitHub</a>
+    </p>
+  </div>
+
+  <div class="container">
+    <div class="header">
+      <div class="flex items-center">
+        <h1 class="text-2xl font-bold text-gray-900">Workflow Builder Demo</h1>
+        <span class="ml-3 inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+          Beta
+        </span>
+      </div>
+      <div>
+        <button class="button" id="execute-btn">
+          <i class="fas fa-play mr-1"></i> Execute
+        </button>
+        <button class="button secondary" id="reset-btn">
+          <i class="fas fa-redo mr-1"></i> Reset
+        </button>
+      </div>
+    </div>
+
+    <div class="canvas">
+      <div class="sidebar">
+        <div class="node-category">Flow Control</div>
+        <div class="node" data-type="begin">Begin</div>
+        <div class="node" data-type="end">End</div>
+        <div class="node" data-type="branch">Branch</div>
+        <div class="node" data-type="loop">Loop</div>
+        
+        <div class="node-category">Data</div>
+        <div class="node" data-type="variable">Variable</div>
+        <div class="node" data-type="array">Array</div>
+        <div class="node" data-type="object">Object</div>
+        
+        <div class="node-category">Text</div>
+        <div class="node" data-type="text-input">Text Input</div>
+        <div class="node" data-type="text-output">Text Output</div>
+        <div class="node" data-type="text-transform">Text Transform</div>
+        
+        <div class="node-category">Math</div>
+        <div class="node" data-type="math-operation">Math Operation</div>
+        <div class="node" data-type="comparison">Comparison</div>
+      </div>
+      
+      <div class="canvas-area" id="canvas-area">
+        <!-- Sample nodes -->
+        <div class="canvas-node" style="left: 300px; top: 100px;">
+          <div class="canvas-node-header">Begin</div>
+          <div class="flex justify-between mt-2">
+            <div></div>
+            <div><span class="port output"></span></div>
+          </div>
+        </div>
+        
+        <div class="canvas-node" style="left: 500px; top: 100px;">
+          <div class="canvas-node-header">Text Input</div>
+          <div class="flex justify-between mt-2">
+            <div><span class="port input"></span></div>
+            <div><span class="port output"></span></div>
+          </div>
+        </div>
+        
+        <div class="canvas-node" style="left: 700px; top: 100px;">
+          <div class="canvas-node-header">Text Output</div>
+          <div class="flex justify-between mt-2">
+            <div><span class="port input"></span></div>
+            <div></div>
+          </div>
+        </div>
+        
+        <!-- Sample connections -->
+        <div class="connection" style="left: 362px; top: 131px; width: 138px;"></div>
+        <div class="connection" style="left: 562px; top: 131px; width: 138px;"></div>
+      </div>
+    </div>
+    
+    <div class="mt-4">
+      <h2 class="text-xl font-semibold mb-2">How to Use</h2>
+      <p>This is a static demo of the Workflow Builder interface. In the full version, you can:</p>
+      <ul class="list-disc ml-5 mt-2">
+        <li>Drag nodes from the sidebar to the canvas</li>
+        <li>Connect nodes by dragging from output ports to input ports</li>
+        <li>Configure nodes by clicking on them</li>
+        <li>Execute workflows and see the results</li>
+        <li>Save and load workflows</li>
+      </ul>
+    </div>
+    
+    <div class="mt-4">
+      <h2 class="text-xl font-semibold mb-2">Keyboard Shortcuts</h2>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <p><strong>Scroll Wheel:</strong> Zoom in/out</p>
+          <p><strong>Alt+Click or Middle-Click:</strong> Pan canvas</p>
+          <p><strong>C:</strong> Center view</p>
+        </div>
+        <div>
+          <p><strong>Ctrl+F or /:</strong> Search nodes</p>
+          <p><strong>Alt+M:</strong> Toggle minimap</p>
+          <p><strong>Right-Click:</strong> Context menu</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="footer">
+      <p>This is a demo version of the Workflow Builder. No data is saved between sessions.</p>
+      <div class="flex justify-center space-x-4 mt-2">
+        <button class="px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 text-xs" id="shortcuts-btn">
+          <i class="fas fa-keyboard mr-1"></i> Keyboard Shortcuts
+        </button>
+        <button class="px-3 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200 text-xs" id="feedback-btn">
+          <i class="fas fa-comment mr-1"></i> Send Feedback
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Simple interactivity for the demo
+    document.getElementById('execute-btn').addEventListener('click', function() {
+      alert('In the full version, this would execute the workflow and show results.');
+    });
+    
+    document.getElementById('reset-btn').addEventListener('click', function() {
+      alert('In the full version, this would reset the workflow to its initial state.');
+    });
+    
+    document.getElementById('shortcuts-btn').addEventListener('click', function() {
+      alert('Keyboard Shortcuts:\n\n' +
+            'Scroll Wheel: Zoom in/out\n' +
+            'Alt+Click or Middle-Click: Pan canvas\n' +
+            'C: Center view\n' +
+            'Ctrl+F or /: Search nodes\n' +
+            'Alt+M: Toggle minimap\n' +
+            'Right-Click: Context menu');
+    });
+    
+    document.getElementById('feedback-btn').addEventListener('click', function() {
+      const feedback = prompt('We\'d love to hear your feedback about the Workflow Builder!\n\nWhat do you think? What features would you like to see?');
+      if (feedback) {
+        alert('Thank you for your feedback! In a real implementation, this would be sent to our servers.');
+      }
+    });
+    
+    // Make the nodes in the sidebar draggable (visual only)
+    document.querySelectorAll('.node').forEach(function(node) {
+      node.addEventListener('mousedown', function() {
+        alert('In the full version, you would be able to drag this node to the canvas.');
+      });
+    });
+  </script>
+</body>
+</html>

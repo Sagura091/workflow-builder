@@ -487,10 +487,27 @@ any
    def load_types():
        # Load built-in types
        # ...
-       
+
        # Load custom types
        load_type_file("my_types.json")
    ```
+
+## Directory Structure
+
+The project is organized into the following directories:
+
+```
+workflow-builder/
+├── backend/            # Backend code (FastAPI)
+├── frontend/           # Frontend code (React)
+├── docs/               # Documentation and examples
+│   ├── examples/       # Example files and templates
+│   └── json/           # JSON files for documentation and testing
+├── scripts/            # Scripts for development and deployment
+│   ├── deployment/     # Deployment scripts
+│   └── utils/          # Utility scripts
+└── backups/            # Backup files
+```
 
 ## Deployment
 
@@ -501,10 +518,13 @@ any
    "homepage": "https://yourusername.github.io/workflow-builder"
    ```
 
-2. Deploy using the provided script:
+2. Deploy to GitHub Pages using one of the deployment scripts:
    ```bash
-   cd frontend
-   ./direct-deploy.ps1  # or direct-deploy.bat
+   # On Windows
+   ./scripts/deployment/deploy-github-pages.bat
+
+   # On Unix/Linux/Mac
+   ./scripts/deployment/deploy-github-pages.sh
    ```
 
 3. The demo will be available at `https://yourusername.github.io/workflow-builder`
