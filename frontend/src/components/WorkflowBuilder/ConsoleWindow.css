@@ -1,0 +1,91 @@
+/* Console Window Styles */
+.console-window {
+  transition: height 0.3s ease;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.console-window.minimized {
+  height: 40px;
+}
+
+.console-content {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+}
+
+.console-content::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.console-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.console-content::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.5);
+  border-radius: 4px;
+}
+
+.console-content::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(156, 163, 175, 0.7);
+}
+
+.log-entry {
+  transition: background-color 0.2s ease;
+}
+
+.log-entry:hover {
+  background-color: rgba(243, 244, 246, 0.5);
+}
+
+.dark .log-entry:hover {
+  background-color: rgba(55, 65, 81, 0.5);
+}
+
+/* Animation for running status */
+@keyframes pulse {
+  0% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 1.5s infinite;
+}
+
+/* Status colors */
+.status-pending {
+  color: #f59e0b; /* Amber-500 */
+}
+
+.status-running {
+  color: #3b82f6; /* Blue-500 */
+}
+
+.status-completed {
+  color: #10b981; /* Green-500 */
+}
+
+.status-failed {
+  color: #ef4444; /* Red-500 */
+}
+
+.status-skipped {
+  color: #6b7280; /* Gray-500 */
+}
+
+.status-cached {
+  color: #8b5cf6; /* Purple-500 */
+}
+
+/* Dark mode adjustments */
+.dark .console-window {
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3);
+}

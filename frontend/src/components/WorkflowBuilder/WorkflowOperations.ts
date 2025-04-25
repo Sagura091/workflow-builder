@@ -1,6 +1,6 @@
 /**
  * WorkflowOperations.ts
- * 
+ *
  * This file contains utility functions for workflow operations like save, load, export, and import.
  */
 
@@ -8,33 +8,33 @@ import { Workflow } from '../../types';
 
 /**
  * Save a workflow to local storage
- * 
+ *
  * @param workflow The workflow to save
  * @returns The ID of the saved workflow
  */
 export const saveWorkflow = (workflow: Workflow): string => {
   // Generate a unique ID if one doesn't exist
   const workflowId = workflow.id || `workflow-${Date.now()}`;
-  
+
   // Create a copy of the workflow with the ID
   const workflowToSave = {
     ...workflow,
     id: workflowId,
     lastSaved: new Date().toISOString()
   };
-  
+
   // Save to local storage
   try {
     // Get existing workflows
     const existingWorkflowsJson = localStorage.getItem('workflows') || '{}';
     const existingWorkflows = JSON.parse(existingWorkflowsJson);
-    
+
     // Add or update this workflow
     existingWorkflows[workflowId] = workflowToSave;
-    
+
     // Save back to local storage
     localStorage.setItem('workflows', JSON.stringify(existingWorkflows));
-    
+
     return workflowId;
   } catch (error) {
     console.error('Error saving workflow:', error);
@@ -44,7 +44,7 @@ export const saveWorkflow = (workflow: Workflow): string => {
 
 /**
  * Get all saved workflows from local storage
- * 
+ *
  * @returns An array of saved workflows
  */
 export const getSavedWorkflows = (): Workflow[] => {
@@ -52,10 +52,13 @@ export const getSavedWorkflows = (): Workflow[] => {
     // Get workflows from local storage
     const workflowsJson = localStorage.getItem('workflows') || '{}';
     const workflows = JSON.parse(workflowsJson);
-    
+
     // Convert to array and sort by last saved date
-    return Object.values(workflows).sort((a: any, b: any) => {
-      return new Date(b.lastSaved).getTime() - new Date(a.lastSaved).getTime();
+    const workflowArray = Object.values(workflows) as Workflow[];
+    return workflowArray.sort((a: Workflow, b: Workflow) => {
+      const dateA = a.lastSaved ? new Date(a.lastSaved).getTime() : 0;
+      const dateB = b.lastSaved ? new Date(b.lastSaved).getTime() : 0;
+      return dateB - dateA;
     });
   } catch (error) {
     console.error('Error getting saved workflows:', error);
@@ -65,7 +68,7 @@ export const getSavedWorkflows = (): Workflow[] => {
 
 /**
  * Load a workflow from local storage by ID
- * 
+ *
  * @param workflowId The ID of the workflow to load
  * @returns The loaded workflow or null if not found
  */
@@ -74,7 +77,7 @@ export const loadWorkflow = (workflowId: string): Workflow | null => {
     // Get workflows from local storage
     const workflowsJson = localStorage.getItem('workflows') || '{}';
     const workflows = JSON.parse(workflowsJson);
-    
+
     // Return the requested workflow
     return workflows[workflowId] || null;
   } catch (error) {
@@ -85,7 +88,7 @@ export const loadWorkflow = (workflowId: string): Workflow | null => {
 
 /**
  * Delete a workflow from local storage
- * 
+ *
  * @param workflowId The ID of the workflow to delete
  * @returns True if successful, false otherwise
  */
@@ -94,16 +97,16 @@ export const deleteWorkflow = (workflowId: string): boolean => {
     // Get workflows from local storage
     const workflowsJson = localStorage.getItem('workflows') || '{}';
     const workflows = JSON.parse(workflowsJson);
-    
+
     // Remove the workflow
     if (workflows[workflowId]) {
       delete workflows[workflowId];
-      
+
       // Save back to local storage
       localStorage.setItem('workflows', JSON.stringify(workflows));
       return true;
     }
-    
+
     return false;
   } catch (error) {
     console.error('Error deleting workflow:', error);
@@ -113,34 +116,34 @@ export const deleteWorkflow = (workflowId: string): boolean => {
 
 /**
  * Export a workflow to a JSON file
- * 
+ *
  * @param workflow The workflow to export
  */
 export const exportWorkflow = (workflow: Workflow): void => {
   try {
     // Create a JSON string from the workflow
     const workflowJson = JSON.stringify(workflow, null, 2);
-    
+
     // Create a blob from the JSON
     const blob = new Blob([workflowJson], { type: 'application/json' });
-    
+
     // Create a URL for the blob
     const url = URL.createObjectURL(blob);
-    
+
     // Create a link element
     const link = document.createElement('a');
     link.href = url;
     link.download = `${workflow.name.replace(/\s+/g, '_')}_${Date.now()}.json`;
-    
+
     // Append the link to the body
     document.body.appendChild(link);
-    
+
     // Click the link
     link.click();
-    
+
     // Remove the link
     document.body.removeChild(link);
-    
+
     // Revoke the URL
     URL.revokeObjectURL(url);
   } catch (error) {
@@ -151,14 +154,14 @@ export const exportWorkflow = (workflow: Workflow): void => {
 
 /**
  * Import a workflow from a JSON file
- * 
+ *
  * @param file The file to import
  * @returns A promise that resolves to the imported workflow
  */
 export const importWorkflowFromFile = (file: File): Promise<Workflow> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    
+
     reader.onload = (event) => {
       try {
         if (event.target && typeof event.target.result === 'string') {
@@ -171,18 +174,18 @@ export const importWorkflowFromFile = (file: File): Promise<Workflow> => {
         reject(error);
       }
     };
-    
+
     reader.onerror = () => {
       reject(new Error('Error reading file'));
     };
-    
+
     reader.readAsText(file);
   });
 };
 
 /**
  * Create a workflow selection dialog
- * 
+ *
  * @param workflows Array of workflows to choose from
  * @returns A promise that resolves to the selected workflow ID or null if cancelled
  */
@@ -192,7 +195,7 @@ export const createWorkflowSelectionDialog = (workflows: Workflow[]): Promise<st
     const modal = document.createElement('div');
     modal.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50';
     modal.style.zIndex = '9999';
-    
+
     // Create modal content
     modal.innerHTML = `
       <div class="bg-white rounded-lg shadow-xl w-full max-w-md">
@@ -203,16 +206,16 @@ export const createWorkflowSelectionDialog = (workflows: Workflow[]): Promise<st
               <i class="fas fa-times"></i>
             </button>
           </div>
-          
+
           <div class="max-h-96 overflow-y-auto">
-            ${workflows.length > 0 
+            ${workflows.length > 0
               ? workflows.map((workflow, index) => `
                 <div class="workflow-item p-3 border-b border-gray-200 hover:bg-gray-50 cursor-pointer" data-id="${workflow.id}">
                   <div class="flex justify-between items-center">
                     <div>
                       <h3 class="font-medium text-gray-800">${workflow.name}</h3>
                       <p class="text-sm text-gray-500">
-                        ${workflow.lastSaved 
+                        ${workflow.lastSaved
                           ? `Last saved: ${new Date(workflow.lastSaved).toLocaleString()}`
                           : 'Not saved yet'}
                       </p>
@@ -229,7 +232,7 @@ export const createWorkflowSelectionDialog = (workflows: Workflow[]): Promise<st
               : '<div class="p-4 text-center text-gray-500">No saved workflows found</div>'
             }
           </div>
-          
+
           <div class="mt-6 flex justify-end">
             <button id="cancel-selection" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 mr-2">
               Cancel
@@ -238,28 +241,28 @@ export const createWorkflowSelectionDialog = (workflows: Workflow[]): Promise<st
         </div>
       </div>
     `;
-    
+
     // Add modal to body
     document.body.appendChild(modal);
-    
+
     // Add event listeners
     const closeModal = () => {
       document.body.removeChild(modal);
       resolve(null);
     };
-    
+
     // Close button
     const closeButton = modal.querySelector('#close-modal');
     if (closeButton) {
       closeButton.addEventListener('click', closeModal);
     }
-    
+
     // Cancel button
     const cancelButton = modal.querySelector('#cancel-selection');
     if (cancelButton) {
       cancelButton.addEventListener('click', closeModal);
     }
-    
+
     // Workflow selection
     const workflowItems = modal.querySelectorAll('.workflow-item');
     workflowItems.forEach(item => {
@@ -272,7 +275,7 @@ export const createWorkflowSelectionDialog = (workflows: Workflow[]): Promise<st
         }
       });
     });
-    
+
     // Delete buttons
     const deleteButtons = modal.querySelectorAll('.delete-workflow');
     deleteButtons.forEach(button => {
@@ -280,13 +283,13 @@ export const createWorkflowSelectionDialog = (workflows: Workflow[]): Promise<st
         e.stopPropagation();
         const target = e.currentTarget as HTMLElement;
         const workflowId = target.dataset.id;
-        if (workflowId && confirm('Are you sure you want to delete this workflow?')) {
+        if (workflowId && window.confirm('Are you sure you want to delete this workflow?')) {
           deleteWorkflow(workflowId);
           const item = modal.querySelector(`.workflow-item[data-id="${workflowId}"]`);
           if (item && item.parentNode) {
             item.parentNode.removeChild(item);
           }
-          
+
           // If no workflows left, show message
           if (modal.querySelectorAll('.workflow-item').length === 0) {
             const container = modal.querySelector('.max-h-96');

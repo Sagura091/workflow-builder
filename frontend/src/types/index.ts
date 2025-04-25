@@ -76,6 +76,11 @@ export interface Workflow {
   name: string;
   nodes: NodeData[];
   connections: Connection[];
+  lastSaved?: string;
+  description?: string;
+  created?: string;
+  modified?: string;
+  exported?: string;
 }
 
 // State Types
@@ -116,24 +121,8 @@ export interface ValidationError {
 }
 
 // Execution Types
-export interface ExecutionStatus {
-  status: 'pending' | 'running' | 'completed' | 'failed';
-  nodeStatuses: Record<string, NodeExecutionStatus>;
-  logs: ExecutionLog[];
-}
-
-export interface NodeExecutionStatus {
-  status: 'pending' | 'running' | 'completed' | 'failed';
-  startTime?: Date;
-  endTime?: Date;
-  error?: string;
-}
-
-export interface ExecutionLog {
-  node: string;
-  value: any;
-  timestamp: Date;
-}
+// Re-export all execution types from the dedicated file
+export * from './execution';
 
 // API Response Types
 export interface ApiResponse<T> {

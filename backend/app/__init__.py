@@ -36,6 +36,10 @@ from backend.app.views import (
     workflow_routes,
     execution_routes
 )
+
+# Import routers
+from backend.app.routers.standalone_plugins import router as standalone_plugins_router
+from backend.app.routers.plugin_testing import router as plugin_testing_router
 from backend.app.services.core_node_registry import CoreNodeRegistry
 
 def create_app():
@@ -110,6 +114,12 @@ def create_app():
     app.include_router(node_types_routes)
     app.include_router(workflow_routes.router)
     app.include_router(execution_routes.router)
+
+    # Register standalone plugins router
+    app.include_router(standalone_plugins_router, prefix="/api")
+
+    # Register plugin testing router
+    app.include_router(plugin_testing_router, prefix="/api")
 
     @app.get("/", tags=["root"])
     async def root():

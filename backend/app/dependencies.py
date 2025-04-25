@@ -1,10 +1,13 @@
 from fastapi import Depends
 from backend.app.services.plugin_manager import PluginManager
+from backend.app.services.plugin_loader import PluginLoader
 from backend.app.services.type_registry import TypeRegistry
 from backend.app.services.template_service import TemplateService
 from backend.app.services.core_node_registry import CoreNodeRegistry
 from backend.app.services.node_registry import NodeRegistry
 from backend.app.controllers.plugin_controller import PluginController
+from backend.app.controllers.standalone_plugin_controller import StandalonePluginController
+from backend.app.controllers.plugin_testing_controller import PluginTestingController
 from backend.app.controllers.type_controller import TypeController
 from backend.app.controllers.node_controller import NodeController
 from backend.app.controllers.connection_controller import ConnectionController
@@ -17,6 +20,7 @@ import os
 
 # Singleton instances
 _plugin_manager = None
+_plugin_loader = None
 _type_registry = None
 _template_service = None
 _node_registry = None
@@ -32,6 +36,19 @@ def get_plugin_manager():
         _plugin_manager = PluginManager(plugin_dir)
         _plugin_manager.load_all_plugins()
     return _plugin_manager
+
+def get_plugin_loader():
+    global _plugin_loader
+    if _plugin_loader is None:
+        # Get the path to the backend directory
+        backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        # Set the plugin directory to backend/plugins
+        plugin_dir = os.environ.get("PLUGIN_DIR", os.path.join(backend_dir, "plugins"))
+        # Set the core nodes directory to backend/core_nodes
+        core_nodes_dir = os.environ.get("CORE_NODES_DIR", os.path.join(backend_dir, "core_nodes"))
+        _plugin_loader = PluginLoader(plugin_dir, core_nodes_dir)
+        _plugin_loader.load_all_plugins()
+    return _plugin_loader
 
 def get_type_registry():
     global _type_registry
@@ -111,3 +128,13 @@ def get_node_validation_controller(
 
 def get_execution_controller() -> ExecutionController:
     return ExecutionController()
+
+def get_standalone_plugin_controller(
+    plugin_loader: PluginLoader = Depends(get_plugin_loader)
+) -> StandalonePluginController:
+    return StandalonePluginController(plugin_loader)
+
+def get_plugin_testing_controller(
+    plugin_loader: PluginLoader = Depends(get_plugin_loader)
+) -> PluginTestingController:
+    return PluginTestingController(plugin_loader)

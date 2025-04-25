@@ -100,3 +100,14 @@ export interface WorkflowExecutionResponse {
   message?: string;
   error?: string;
 }
+
+export interface ExecutionOptions {
+  use_cache?: boolean;
+  cache_ttl?: number;
+  parallel_execution?: boolean;
+  max_retries?: number;
+  timeout?: number;
+  output_format?: string;
+  output_destination?: string;
+  output_options?: Record<string, any>;
+}

@@ -12,6 +12,8 @@ import NodeEditorModal from './NodeEditorModal';
 import PropertiesPanel from './PropertiesPanel';
 import ExecutionVisualization from './ExecutionVisualization';
 import KeyboardShortcutsModal from './KeyboardShortcutsModal';
+import ConsoleWindow from './ConsoleWindow';
+import './ConsoleWindow.css';
 import { useNodeDiscovery } from '../../contexts/NodeDiscoveryContext';
 import { WebSocketProvider } from '../../contexts/WebSocketContext';
 import { useKeyboardShortcuts, getDefaultShortcuts, Shortcut } from '../../services/keyboardShortcuts';
@@ -19,6 +21,7 @@ import { FEATURES } from '../../config';
 import { MockAuthProvider } from './MockAuthProvider';
 import { useDemoMode } from '../../contexts/DemoModeContext';
 import { DemoModeToggle, DemoWelcomeModal, DemoExecutionPanel, DemoFeedbackButton } from '../DemoMode';
+import { DevelopmentModeToggle } from '../DevelopmentTools';
 import { saveWorkflow, getSavedWorkflows, loadWorkflow, exportWorkflow, createWorkflowSelectionDialog } from './WorkflowOperations';
 
 // Initial state
@@ -136,6 +139,9 @@ const WorkflowBuilder: React.FC = () => {
   const [activeExecution, setActiveExecution] = useState<{isActive: boolean, executionId: string | null}>({isActive: false, executionId: null});
   const [showShortcutsModal, setShowShortcutsModal] = useState<boolean>(false);
 
+  // Console window state
+  const [showConsoleWindow, setShowConsoleWindow] = useState<boolean>(false);
+
   // State for plugin notification
   const [showPluginNotification, setShowPluginNotification] = useState(false);
   const [pluginCount, setPluginCount] = useState(0);
@@ -244,7 +250,7 @@ const WorkflowBuilder: React.FC = () => {
 
         if (selectedWorkflow) {
           // Confirm if there are unsaved changes
-          if (state.nodes.length > 0 && !confirm('Are you sure you want to load this workflow? Any unsaved changes will be lost.')) {
+          if (state.nodes.length > 0 && !window.confirm('Are you sure you want to load this workflow? Any unsaved changes will be lost.')) {
             return;
           }
 
@@ -284,7 +290,7 @@ const WorkflowBuilder: React.FC = () => {
   const handleImportWorkflow = (importedWorkflow: Workflow) => {
     try {
       // Confirm if there are unsaved changes
-      if (state.nodes.length > 0 && !confirm('Are you sure you want to import this workflow? Any unsaved changes will be lost.')) {
+      if (state.nodes.length > 0 && !window.confirm('Are you sure you want to import this workflow? Any unsaved changes will be lost.')) {
         return;
       }
 
@@ -838,7 +844,7 @@ const WorkflowBuilder: React.FC = () => {
             {/* Demo Mode Components - Only render when DemoModeProvider is available */}
             {hasDemoProvider.current && (
               <>
-                <DemoModeToggle />
+                {/* We're using the DevelopmentModeToggle instead of DemoModeToggle */}
                 <DemoWelcomeModal />
                 {isDemoMode && <DemoFeedbackButton />}
                 {isDemoMode && showDemoExecutionPanel && (
@@ -1055,6 +1061,15 @@ const WorkflowBuilder: React.FC = () => {
                       >
                         <i className="fas fa-sliders-h mr-1"></i> Properties
                       </button>
+                      {activeExecution.executionId && (
+                        <button
+                          className={`ml-2 px-3 py-1 ${showConsoleWindow ? 'bg-teal-600' : 'bg-gray-600'} text-white rounded hover:bg-teal-700 text-sm`}
+                          onClick={() => setShowConsoleWindow(!showConsoleWindow)}
+                          title={showConsoleWindow ? 'Hide Console' : 'Show Console'}
+                        >
+                          <i className="fas fa-terminal mr-1"></i> Console
+                        </button>
+                      )}
                     </div>
                   </div>
 
@@ -1152,6 +1167,10 @@ const WorkflowBuilder: React.FC = () => {
                   onClose={() => setShowExecutionPanel(false)}
                   onVisualizationChange={(isActive, executionId) => {
                     setActiveExecution({isActive, executionId});
+                    // Show console window when execution starts
+                    if (isActive && executionId) {
+                      setShowConsoleWindow(true);
+                    }
                   }}
                 />
               )}
@@ -1177,6 +1196,18 @@ const WorkflowBuilder: React.FC = () => {
               <KeyboardShortcutsModal
                 shortcuts={shortcuts}
                 onClose={() => setShowShortcutsModal(false)}
+              />
+            )}
+
+            {/* Development Mode Toggle */}
+            <DevelopmentModeToggle />
+
+            {/* Console Window */}
+            {showConsoleWindow && activeExecution.executionId && (
+              <ConsoleWindow
+                executionId={activeExecution.executionId}
+                isExecuting={activeExecution.isActive}
+                onClose={() => setShowConsoleWindow(false)}
               />
             )}
           </div>

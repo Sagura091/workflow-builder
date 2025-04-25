@@ -35,7 +35,7 @@ const DemoFeedbackButton: React.FC = () => {
       };
 
       // Helper function to categorize feedback based on content
-      function getFeedbackCategory(text) {
+      function getFeedbackCategory(text: string): string {
         const lowerText = text.toLowerCase();
         if (lowerText.includes('bug') || lowerText.includes('error') || lowerText.includes('issue') || lowerText.includes('doesn\'t work')) {
           return 'Bug Report';
